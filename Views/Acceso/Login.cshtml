@@ -1,0 +1,212 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SMDG - Iniciar sesión</title>
+    
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .info-alert {
+            background-color: #1877f2;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+        }
+
+        .info-alert i {
+            margin-right: 10px;
+            background-color: white;
+            color: #1877f2;
+            border-radius: 50%;
+            padding: 4px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #1c1e21;
+        }
+
+        .form-control-fb {
+            height: 52px;
+            font-size: 17px;
+            padding: 14px 16px;
+            border-radius: 6px;
+            border: 1px solid #dddfe2;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .form-control-fb:focus {
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px #e7f3ff;
+            outline: none;
+        }
+
+        .btn-login {
+            background-color: #1877f2;
+            border: none;
+            border-radius: 6px;
+            font-size: 20px;
+            line-height: 48px;
+            padding: 0 16px;
+            width: 100%;
+            font-weight: 700;
+            color: white;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-login:hover {
+            background-color: #166fe5;
+        }
+
+        .forgot-password {
+            display: block;
+            margin: 16px 0;
+            color: #1877f2;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            border-bottom: 1px solid #dadde1;
+            margin: 20px 0;
+        }
+
+        .btn-create {
+            background-color: #42b72a;
+            border: none;
+            border-radius: 6px;
+            font-size: 17px;
+            line-height: 48px;
+            padding: 0 16px;
+            font-weight: 700;
+            color: white;
+            display: inline-block;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-create:hover {
+            background-color: #36a420;
+        }
+
+        .test-users {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #8a8d91;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <!-- Info alert similar to Facebook style -->
+        <div class="info-alert">
+            <i class="fas fa-info"></i>
+            <span>Debes iniciar sesión para continuar.</span>
+        </div>
+
+        <div class="login-card shadow-sm">
+            <h2>Inicia sesión en SMDG</h2>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger py-2 mb-3" style="font-size: 14px;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> @ViewBag.Error
+                </div>
+            }
+
+            <form asp-controller="Acceso" asp-action="Login" method="post">
+                <div>
+                    <input type="text" 
+                           class="form-control-fb"
+                           name="nombreUsuario"
+                           placeholder="Número de empleado" 
+                           required>
+                </div>
+                <div>
+                    <input type="password" 
+                           class="form-control-fb"
+                           name="password"
+                           placeholder="Contraseña" 
+                           required>
+                </div>
+                <button type="submit" class="btn-login">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <a href="#" class="forgot-password">¿Olvidaste tu cuenta?</a>
+
+            <div class="divider"></div>
+
+            <a href="#" class="btn-create">Crear cuenta nueva</a>
+            
+            <div class="test-users">
+                <hr style="margin: 10px 0; opacity: 0.1;">
+                <b>Demo:</b> 01231420 / jazzmin <br>
+                01230708 / cinthia
+            </div>
+        </div>
+    </div>
+
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
