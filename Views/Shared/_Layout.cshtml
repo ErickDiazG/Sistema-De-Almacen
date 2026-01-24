@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SB Admin 2 - Dashboard</title>
+    <title>@ViewData["Title"] - Sistema Almacén SMDG</title>
 
     <!-- Custom fonts for this template-->
     <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -31,18 +31,33 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Dashboard" asp-action="Index">
+            <a class="sidebar-brand d-flex flex-column align-items-center justify-content-center" asp-controller="Dashboard" asp-action="Index" style="height: auto; padding: 1.5rem 0;">
                 <div class="sidebar-brand-icon">
-                    <img src="~/img/SMDG.png" alt="SMDG Logo" style="width: 65px; height: auto;" />
+                    <img src="~/img/SMDG.png" alt="SMDG Logo" class="img-profile rounded-circle shadow" 
+                         style="width: 70px; height: 70px; border: 3px solid rgba(255,255,255,0.2); background-color: white; object-fit: contain;" />
                 </div>
-                <div class="sidebar-brand-text mx-3" style="font-size: 1.5rem; font-weight: 700;">SMDG</div>
+                <div class="sidebar-brand-text mx-3 mt-3 d-flex flex-column align-items-center">
+                    <div style="font-size: 1.2rem; font-weight: 800; text-uppercase; letter-spacing: 2px;">SMDG</div>
+                    <div class="small text-white-50" style="letter-spacing: 1px; font-weight: 600;">SYSTEMS</div>
+                </div>
             </a>
 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
+            @{
+                string controller = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+                string action = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+                
+                // Grupos de navegacion
+                bool isCatalogos = (new[] { "Productos", "Proveedores", "Ubicaciones" }).Contains(controller);
+                bool isOperaciones = (new[] { "Entradas", "Inventario", "Venta" }).Contains(controller) || (controller == "Home" && action == "Index");
+                bool isReportes = (new[] { "Reportes", "Movimientos", "Auditoria" }).Contains(controller);
+                bool isAdmin = (new[] { "Usuarios" }).Contains(controller);
+            }
+
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item active">
+            <li class="nav-item @(controller == "Dashboard" ? "active" : "")">
                 <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -52,50 +67,70 @@
             <!-- Divider -->
             <hr class="sidebar-divider">
 
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                OPERACIONES
-            </div>
-
-            <!-- Nav Item - Inventario FIFO -->
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-fw fa-boxes"></i>
-                    <span>Inventario FIFO</span>
+            <!-- Nav Item - Catálogos Collapse Menu -->
+            <li class="nav-item @(isCatalogos ? "active" : "")">
+                <a class="nav-link @(isCatalogos ? "" : "collapsed")" href="#" data-toggle="collapse" data-target="#collapseCatalogos"
+                    aria-expanded="@(isCatalogos ? "true" : "false")" aria-controls="collapseCatalogos">
+                    <i class="fas fa-fw fa-folder"></i>
+                    <span>Catálogos</span>
                 </a>
+                <div id="collapseCatalogos" class="collapse @(isCatalogos ? "show" : "")" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item @(controller == "Productos" ? "active font-weight-bold" : "")" asp-controller="Productos" asp-action="Index">Productos</a>
+                        <a class="collapse-item @(controller == "Proveedores" ? "active font-weight-bold" : "")" asp-controller="Proveedores" asp-action="Index">Proveedores</a>
+                        <a class="collapse-item @(controller == "Ubicaciones" ? "active font-weight-bold" : "")" asp-controller="Ubicaciones" asp-action="Index">Ubicaciones</a>
+                    </div>
+                </div>
             </li>
 
-            <!-- Nav Item - Punto de Venta -->
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-fw fa-cash-register"></i>
-                    <span>Punto de Venta</span>
+            <!-- Nav Item - Operaciones Collapse Menu -->
+            <li class="nav-item @(isOperaciones ? "active" : "")">
+                <a class="nav-link @(isOperaciones ? "" : "collapsed")" href="#" data-toggle="collapse" data-target="#collapseOperaciones"
+                    aria-expanded="@(isOperaciones ? "true" : "false")" aria-controls="collapseOperaciones">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>Operaciones</span>
                 </a>
+                <div id="collapseOperaciones" class="collapse @(isOperaciones ? "show" : "")" aria-labelledby="headingUtilities"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item @(controller == "Entradas" ? "active font-weight-bold" : "")" asp-controller="Entradas" asp-action="Create">Entradas (Compras)</a>
+                        <a class="collapse-item @(controller == "Inventario" ? "active font-weight-bold" : "")" asp-controller="Inventario" asp-action="Index">Inventario FIFO</a>
+                        <a class="collapse-item @(controller == "Venta" || (controller == "Home" && action == "Index") ? "active font-weight-bold" : "")" asp-controller="Home" asp-action="Index">Punto de Venta</a>
+                    </div>
+                </div>
             </li>
 
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                ADMINISTRACIÓN
-            </div>
-
-            <!-- Nav Item - Reportes / Historial -->
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Reportes / Historial</span>
+            <!-- Nav Item - Reportes Collapse Menu -->
+            <li class="nav-item @(isReportes ? "active" : "")">
+                <a class="nav-link @(isReportes ? "" : "collapsed")" href="#" data-toggle="collapse" data-target="#collapseReportes"
+                    aria-expanded="@(isReportes ? "true" : "false")" aria-controls="collapseReportes">
+                    <i class="fas fa-fw fa-chart-bar"></i>
+                    <span>Reportes</span>
                 </a>
+                <div id="collapseReportes" class="collapse @(isReportes ? "show" : "")" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item @(controller == "Reportes" && action == "Index" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Index">Historial Movimientos</a>
+                        <a class="collapse-item @(controller == "Reportes" && action == "Auditoria" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Auditoria">Auditoría</a>
+                    </div>
+                </div>
             </li>
 
-            <!-- Nav Item - Usuarios -->
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-fw fa-users"></i>
-                    <span>Usuarios</span>
-                </a>
-            </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <!-- Nav Item - Admin Collapse Menu -->
+                <li class="nav-item @(isAdmin ? "active" : "")">
+                    <a class="nav-link @(isAdmin ? "" : "collapsed")" href="#" data-toggle="collapse" data-target="#collapseAdmin"
+                        aria-expanded="@(isAdmin ? "true" : "false")" aria-controls="collapseAdmin">
+                        <i class="fas fa-fw fa-user-shield"></i>
+                        <span>Admin</span>
+                    </a>
+                    <div id="collapseAdmin" class="collapse @(isAdmin ? "show" : "")" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                        <div class="bg-white py-2 collapse-inner rounded">
+                            <a class="collapse-item @(controller == "Usuarios" ? "active font-weight-bold" : "")" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                        </div>
+                    </div>
+                </li>
+            }
 
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
@@ -122,163 +157,8 @@
                         <i class="fa fa-bars"></i>
                     </button>
 
-                    <!-- Topbar Search -->
-                    <form
-                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-                                aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
-
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-                        <li class="nav-item dropdown no-arrow d-sm-none">
-                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-search fa-fw"></i>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                                aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control bg-light border-0 small"
-                                            placeholder="Search for..." aria-label="Search"
-                                            aria-describedby="basic-addon2">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button">
-                                                <i class="fas fa-search fa-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </li>
-
-                        <!-- Nav Item - Alerts -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-bell fa-fw"></i>
-                                <!-- Counter - Alerts -->
-                                <span class="badge badge-danger badge-counter">3+</span>
-                            </a>
-                            <!-- Dropdown - Alerts -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="alertsDropdown">
-                                <h6 class="dropdown-header">
-                                    Alerts Center
-                                </h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-primary">
-                                            <i class="fas fa-file-alt text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 12, 2019</div>
-                                        <span class="font-weight-bold">A new monthly report is ready to download!</span>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-success">
-                                            <i class="fas fa-donate text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 7, 2019</div>
-                                        $290.29 has been deposited into your account!
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-warning">
-                                            <i class="fas fa-exclamation-triangle text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 2, 2019</div>
-                                        Spending Alert: We've noticed unusually high spending for your account.
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
-                            </div>
-                        </li>
-
-                        <!-- Nav Item - Messages -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-envelope fa-fw"></i>
-                                <!-- Counter - Messages -->
-                                <span class="badge badge-danger badge-counter">7</span>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="messagesDropdown">
-                                <h6 class="dropdown-header">
-                                    Message Center
-                                </h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_1.svg"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div class="font-weight-bold">
-                                        <div class="text-truncate">Hi there! I am wondering if you can help me with a
-                                            problem I've been having.</div>
-                                        <div class="small text-gray-500">Emily Fowler · 58m</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_2.svg"
-                                            alt="...">
-                                        <div class="status-indicator"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">I have the photos that you ordered last month, how
-                                            would you like them sent to you?</div>
-                                        <div class="small text-gray-500">Jae Chun · 1d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_3.svg"
-                                            alt="...">
-                                        <div class="status-indicator bg-warning"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Last month's report looks great, I am very happy with
-                                            the progress so far, keep up the good work!</div>
-                                        <div class="small text-gray-500">Morgan Alvarez · 2d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Am I a good boy? The reason I ask is because someone
-                                            told me that people say this to all dogs, even if they aren't good...</div>
-                                        <div class="small text-gray-500">Chicken the Dog · 2w</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
-                            </div>
-                        </li>
 
                         <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -286,7 +166,6 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @* Mostrar nombre e imagen según el rol del usuario *@
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <span class="mr-2 d-none d-lg-inline text-gray-600 small">Ing. Alexander Sosa</span>
@@ -309,12 +188,7 @@
                                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Configuración
                                 </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Registro de Actividad
-                                </a>
                                 <div class="dropdown-divider"></div>
-                                @* Logout con formulario POST *@
                                 <form asp-controller="Acceso" asp-action="Salir" method="post" style="margin: 0;">
                                     <button type="submit" class="dropdown-item" style="cursor: pointer; background: none; border: none; text-align: left; width: 100%; padding: 0.25rem 1.5rem;">
                                         <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
@@ -331,11 +205,7 @@
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
-
                     @RenderBody()
-
-                    </div>
-
                 </div>
                 <!-- /.container-fluid -->
 
@@ -346,7 +216,7 @@
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Your Website 2021</span>
+                        <span>Copyright &copy; SMDG Systems 2026</span>
                     </div>
                 </div>
             </footer>
@@ -363,42 +233,13 @@
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="login.html">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap core JavaScript-->
+    <!-- Scripts -->
     <script src="~/vendor/jquery/jquery.min.js"></script>
     <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Core plugin JavaScript-->
     <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
-
-    <!-- Custom scripts for all pages-->
     <script src="~/js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
-    <script src="~/vendor/chart.js/Chart.min.js"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="~/js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 

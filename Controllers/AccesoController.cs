@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Sistema_Almacen.Models;
+using Sistema_Almacen.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sistema_Almacen.Controllers
 {
@@ -11,13 +13,12 @@ namespace Sistema_Almacen.Controllers
     /// </summary>
     public class AccesoController : Controller
     {
-        // NOTA: Por ahora usamos una lista en memoria para pruebas
-        // En producción, esto debería venir de una base de datos
-        private List<Usuario> _usuariosPrueba = new List<Usuario>
+        private readonly ApplicationDbContext _context;
+
+        public AccesoController(ApplicationDbContext context)
         {
-            new Usuario { Id = 1, NombreUsuario = "01231420", Password = "jazzmin", Rol = "Admin" },
-            new Usuario { Id = 2, NombreUsuario = "01230708", Password = "cinthia", Rol = "Empleado" }
-        };
+            _context = context;
+        }
 
         /// <summary>
         /// GET: /Acceso/Login
@@ -51,8 +52,8 @@ namespace Sistema_Almacen.Controllers
                     return View();
                 }
 
-                // Buscar el usuario en la "base de datos" (lista en memoria por ahora)
-                var usuario = _usuariosPrueba.FirstOrDefault(u => 
+                // Buscar el usuario en la base de datos
+                var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => 
                     u.NombreUsuario == nombreUsuario && 
                     u.Password == password);
 
@@ -107,7 +108,7 @@ namespace Sistema_Almacen.Controllers
                 // ===== REDIRIGIR AL DASHBOARD =====
                 return RedirectToAction("Index", "Dashboard");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Manejo de errores
                 ViewBag.Error = "Ocurrió un error al iniciar sesión. Intente nuevamente.";

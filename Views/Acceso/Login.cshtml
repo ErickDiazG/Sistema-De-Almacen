@@ -9,198 +9,228 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SMDG - Iniciar sesión</title>
+    <title>SMDG Almacen - Acceso</title>
     
     <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --neon-blue: #3b82f6;
+            --neon-glow: 0 0 15px rgba(59, 130, 246, 0.5);
+            --text-light: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            background-color: #f0f2f5;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #020617;
+            /* Background simulation of futuristic warehouse */
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.1) 0%, transparent 40%),
+                linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.8)),
+                url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
+            overflow: hidden;
+            color: var(--text-light);
         }
 
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .info-alert {
-            background-color: #1877f2;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
-        }
-
-        .info-alert i {
-            margin-right: 10px;
-            background-color: white;
-            color: #1877f2;
-            border-radius: 50%;
-            padding: 4px;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
+        /* Decorative Grid Overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .login-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            padding: 20px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
 
-        .login-card h2 {
-            font-size: 18px;
-            font-weight: 400;
+        .brand-container {
+            margin-bottom: 30px;
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 38px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            margin-bottom: 5px;
+        }
+
+        .brand-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
             margin-bottom: 20px;
-            color: #1c1e21;
+            position: relative;
         }
 
-        .form-control-fb {
-            height: 52px;
-            font-size: 17px;
-            padding: 14px 16px;
-            border-radius: 6px;
-            border: 1px solid #dddfe2;
-            margin-bottom: 12px;
+        .form-control-glass {
             width: 100%;
-        }
-
-        .form-control-fb:focus {
-            border-color: #1877f2;
-            box-shadow: 0 0 0 2px #e7f3ff;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            height: 54px;
+            padding: 0 25px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
             outline: none;
         }
 
-        .btn-login {
-            background-color: #1877f2;
-            border: none;
-            border-radius: 6px;
-            font-size: 20px;
-            line-height: 48px;
-            padding: 0 16px;
+        .form-control-glass:focus {
+            border-color: var(--neon-blue);
+            box-shadow: var(--neon-glow);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .form-control-glass::placeholder {
+            color: #64748b;
+        }
+
+        .btn-entrar {
             width: 100%;
-            font-weight: 700;
-            color: white;
-            margin-top: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-login:hover {
-            background-color: #166fe5;
-        }
-
-        .forgot-password {
-            display: block;
-            margin: 16px 0;
-            color: #1877f2;
-            font-size: 14px;
-            text-decoration: none;
-        }
-
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-
-        .divider {
-            border-bottom: 1px solid #dadde1;
-            margin: 20px 0;
-        }
-
-        .btn-create {
-            background-color: #42b72a;
+            height: 54px;
+            background: var(--neon-blue);
             border: none;
-            border-radius: 6px;
-            font-size: 17px;
-            line-height: 48px;
-            padding: 0 16px;
-            font-weight: 700;
+            border-radius: 50px;
             color: white;
-            display: inline-block;
-            text-decoration: none;
-            transition: background-color 0.2s;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--neon-glow);
+            margin-top: 10px;
         }
 
-        .btn-create:hover {
-            background-color: #36a420;
+        .btn-entrar:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.7);
         }
 
-        .test-users {
-            margin-top: 20px;
+        .btn-entrar:active {
+            transform: translateY(0);
+        }
+
+        .deco-image {
+            width: 120px;
+            height: auto;
+            margin: 20px auto;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+        }
+
+        .footer-text {
+            margin-top: 25px;
             font-size: 12px;
-            color: #8a8d91;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .demo-creds {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #475569;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 15px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="login-container">
-        <!-- Info alert similar to Facebook style -->
-        <div class="info-alert">
-            <i class="fas fa-info"></i>
-            <span>Debes iniciar sesión para continuar.</span>
+    <div class="login-card">
+        <div class="brand-container">
+            <h1 class="brand-title">SMDG<br>Almacen</h1>
+            <p class="brand-subtitle">"Gestión Inteligente y Segura"</p>
         </div>
 
-        <div class="login-card shadow-sm">
-            <h2>Inicia sesión en SMDG</h2>
-
-            @if (ViewBag.Error != null)
-            {
-                <div class="alert alert-danger py-2 mb-3" style="font-size: 14px;">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> @ViewBag.Error
-                </div>
-            }
-
-            <form asp-controller="Acceso" asp-action="Login" method="post">
-                <div>
-                    <input type="text" 
-                           class="form-control-fb"
-                           name="nombreUsuario"
-                           placeholder="Número de empleado" 
-                           required>
-                </div>
-                <div>
-                    <input type="password" 
-                           class="form-control-fb"
-                           name="password"
-                           placeholder="Contraseña" 
-                           required>
-                </div>
-                <button type="submit" class="btn-login">
-                    Iniciar sesión
-                </button>
-            </form>
-
-            <a href="#" class="forgot-password">¿Olvidaste tu cuenta?</a>
-
-            <div class="divider"></div>
-
-            <a href="#" class="btn-create">Crear cuenta nueva</a>
-            
-            <div class="test-users">
-                <hr style="margin: 10px 0; opacity: 0.1;">
-                <b>Demo:</b> 01231420 / jazzmin <br>
-                01230708 / cinthia
+        @if (ViewBag.Error != null)
+        {
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i> @ViewBag.Error
             </div>
+        }
+
+        <form asp-controller="Acceso" asp-action="Login" method="post">
+            <div class="form-group">
+                <input type="text" 
+                       name="nombreUsuario" 
+                       class="form-control-glass" 
+                       placeholder="Usuario" 
+                       required>
+            </div>
+            <div class="form-group">
+                <input type="password" 
+                       name="password" 
+                       class="form-control-glass" 
+                       placeholder="Contraseña" 
+                       required>
+            </div>
+            <button type="submit" class="btn-entrar">
+                ENTRAR
+            </button>
+        </form>
+
+        <img src="~/img/undraw_rocket.svg" alt="Decoration" class="deco-image">
+
+        <p class="footer-text">
+            Potenciando tu logística con tecnología avanzada.
+        </p>
+
+        <div class="demo-creds">
+            Demo: 01231420 / jazzmin | 01230708 / cinthia
         </div>
     </div>
 

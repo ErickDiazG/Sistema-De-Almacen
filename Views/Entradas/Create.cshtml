@@ -1,0 +1,95 @@
+@model Sistema_Almacen.Models.LoteInventario
+
+@{
+    ViewData["Title"] = "Entrada de Mercancía";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Registrar Entrada de Mercancía (Compras)</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label class="control-label font-weight-bold">Producto</label>
+                            <select name="productoId" class="form-control" asp-items="ViewBag.ProductoId" required>
+                                <option value="">-- Seleccione Producto --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="control-label font-weight-bold">Proveedor</label>
+                            <select name="proveedorId" class="form-control" asp-items="ViewBag.ProveedorId" required>
+                                <option value="">-- Seleccione Proveedor --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="control-label font-weight-bold">Sucursal Destino</label>
+                            <select name="sucursalId" class="form-control" asp-items="ViewBag.SucursalId" required>
+                                <option value="">-- Seleccione Sucursal --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="control-label font-weight-bold">Ubicación Física</label>
+                            <select name="ubicacionId" class="form-control" asp-items="ViewBag.UbicacionId" required>
+                                <option value="">-- Seleccione Ubicación --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label class="control-label font-weight-bold">Cantidad</label>
+                            <input name="cantidad" type="number" class="form-control" min="1" required />
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label class="control-label font-weight-bold">Costo Unitario ($)</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input name="costoUnitario" type="number" step="0.01" class="form-control" min="0" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="form-group mb-0">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-file-import"></i> Registrar Entrada
+                        </button>
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            @if (TempData["Success"] != null)
+            {
+                <text>
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: '@TempData["Success"]',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                </text>
+            }
+        });
+    </script>
+}

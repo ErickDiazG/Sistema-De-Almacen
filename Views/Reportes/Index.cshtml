@@ -1,0 +1,59 @@
+@model IEnumerable<Sistema_Almacen.Models.MovimientoAlmacen>
+
+@{
+    ViewData["Title"] = "Historial de Movimientos";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Auditoría: Historial de Entradas y Salidas</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Referencia / Producto</th>
+                        <th>Usuario Responsable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (item.Tipo == Sistema_Almacen.Models.TipoMovimiento.Entrada)
+                                {
+                                    <span class="badge badge-success"><i class="fas fa-arrow-down"></i> ENTRADA</span>
+                                }
+                                else if (item.Tipo == Sistema_Almacen.Models.TipoMovimiento.Salida)
+                                {
+                                    <span class="badge badge-danger"><i class="fas fa-arrow-up"></i> VENTA/SALIDA</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning">AJUSTE</span>
+                                }
+                            </td>
+                            <td class="font-weight-bold">@item.Cantidad</td>
+                            <td>@item.Referencia</td>
+                            <td>
+                                <i class="fas fa-user-circle"></i> @item.Usuario?.NombreUsuario
+                                <br>
+                                <small class="text-muted text-uppercase">@item.Usuario?.Rol</small>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Opcional: Cargar DataTables local si es necesario -->
+}

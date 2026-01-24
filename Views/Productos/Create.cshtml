@@ -1,0 +1,102 @@
+@model Sistema_Almacen.Models.Producto
+
+@{
+    ViewData["Title"] = "Nuevo Producto";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Registrar Nuevo Producto</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <label asp-for="Nombre" class="control-label font-weight-bold">Nombre del Producto / Descripción</label>
+                                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Monitor Gamer 24 pulgadas" />
+                                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label asp-for="SKU" class="control-label font-weight-bold">Código SKU (Único)</label>
+                                    <input asp-for="SKU" class="form-control text-uppercase" placeholder="Ej: MON-GAN-24" />
+                                    <span asp-validation-for="SKU" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label asp-for="CategoriaId" class="control-label font-weight-bold">Categoría</label>
+                                    <select asp-for="CategoriaId" class="form-control" asp-items="ViewBag.CategoriaId">
+                                        <option value="">-- Seleccione Categoría --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoriaId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label asp-for="PrecioVenta" class="control-label font-weight-bold">Precio de Venta</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input asp-for="PrecioVenta" class="form-control" type="number" step="0.01" />
+                                    </div>
+                                    <span asp-validation-for="PrecioVenta" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label asp-for="StockMinimo" class="control-label font-weight-bold">Stock Mínimo (Alerta)</label>
+                                    <input asp-for="StockMinimo" class="form-control" type="number" />
+                                    <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 text-center">
+                            <label class="font-weight-bold">Imagen del Producto</label>
+                            <div class="mt-2 mb-3">
+                                <img id="imgPreview" src="~/img/no-image.png" class="img-fluid rounded shadow-sm border" style="max-height: 200px; width: 100%; object-fit: contain;" />
+                            </div>
+                            <div class="custom-file">
+                                <input type="file" name="imagenArchivo" class="custom-file-input" id="customFile" accept="image/*" onchange="previewImage(this)">
+                                <label class="custom-file-label" for="customFile" data-browse="Elegir">Seleccionar archivo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="form-group mb-0">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Producto
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewImage(input) {
+            var file = input.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imgPreview').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+                // Actualizar etiqueta del archivo
+                $(input).next('.custom-file-label').html(file.name);
+            }
+        }
+    </script>
+}

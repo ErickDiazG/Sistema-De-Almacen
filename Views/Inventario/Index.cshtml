@@ -1,0 +1,77 @@
+@model IEnumerable<Sistema_Almacen.Models.ViewModels.InventarioViewModel>
+@{
+    ViewData["Title"] = "Inventario FIFO";
+}
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Inventario de Productos (Lógica FIFO)</h1>
+</div>
+
+<!-- Filtros -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="get" class="form-inline">
+            <label class="mr-2" for="sucursalId">Filtrar por Sucursal:</label>
+            <select name="sucursalId" id="sucursalId" class="form-control mr-2" onchange="this.form.submit()">
+                <option value="">Todas las Sucursales</option>
+                @foreach (var sucursal in ViewBag.Sucursales)
+                {
+                    <option value="@sucursal.Id" selected="@(ViewBag.SucursalSeleccionada == sucursal.Id)">
+                        @sucursal.Nombre
+                    </option>
+                }
+            </select>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Limpiar Filtros</a>
+        </form>
+    </div>
+</div>
+
+<!-- DataTales Example -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Existencias en Almacén</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>SKU</th>
+                        <th>Sucursal</th>
+                        <th>Stock Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Producto</td>
+                            <td>@item.SKU</td>
+                            <td>@item.Sucursal</td>
+                            <td>
+                                <strong>@item.StockTotal</strong>
+                            </td>
+                            <td>
+                                @if (item.StockTotal < 10)
+                                {
+                                    <span class="badge badge-danger">Stock Bajo</span>
+                                }
+                                else if (item.StockTotal < 50)
+                                {
+                                    <span class="badge badge-warning">Stock Medio</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success">Suficiente</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
