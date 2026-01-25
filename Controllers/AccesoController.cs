@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Sistema_Almacen.Models;
 using Sistema_Almacen.Data;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace Sistema_Almacen.Controllers
 {
@@ -52,13 +53,12 @@ namespace Sistema_Almacen.Controllers
                     return View();
                 }
 
-                // Buscar el usuario en la base de datos
+                // Buscar el usuario por nombre de usuario
                 var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => 
-                    u.NombreUsuario == nombreUsuario && 
-                    u.Password == password);
+                    u.NombreUsuario == nombreUsuario);
 
-                // Si no se encuentra el usuario, mostrar error
-                if (usuario == null)
+                // Verificar si existe el usuario y si la contraseña es correcta (BCrypt)
+                if (usuario == null || !BCrypt.Net.BCrypt.Verify(password, usuario.Password))
                 {
                     ViewBag.Error = "Usuario o contraseña incorrectos";
                     return View();

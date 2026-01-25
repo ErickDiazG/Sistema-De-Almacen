@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sistema_Almacen.Data;
 using Sistema_Almacen.Models;
 using Sistema_Almacen.Services;
+using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +47,10 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         
-        // FORZAR RESET: Esto eliminará la base de datos antigua y creará la nueva con el esquema profesional
-        context.Database.EnsureDeleted(); 
+        // ⚠️ SOLO PARA DESARROLLO: Descomentar la siguiente línea para resetear la BD
+        // context.Database.EnsureDeleted();
+        
+        // Crear la base de datos si no existe (no borra datos existentes)
         context.Database.EnsureCreated(); 
 
         // 1. Seed Categorías (REQUERIDO por Producto)
@@ -71,12 +74,22 @@ using (var scope = app.Services.CreateScope())
             context.SaveChanges();
         }
 
-        // 4. Seed Usuarios
+        // 4. Seed Usuarios (contraseñas hasheadas con BCrypt)
         if (!context.Usuarios.Any())
         {
             context.Usuarios.AddRange(
-                new Usuario { NombreUsuario = "01231420", Password = "jazzmin", Rol = "Admin" },
-                new Usuario { NombreUsuario = "01230708", Password = "cinthia", Rol = "Empleado" }
+                new Usuario 
+                { 
+                    NombreUsuario = "01231420", 
+                    Password = BCrypt.Net.BCrypt.HashPassword("jazzmin"), 
+                    Rol = "Admin" 
+                },
+                new Usuario 
+                { 
+                    NombreUsuario = "01230708", 
+                    Password = BCrypt.Net.BCrypt.HashPassword("cinthia"), 
+                    Rol = "Empleado" 
+                }
             );
         }
 

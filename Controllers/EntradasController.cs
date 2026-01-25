@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Sistema_Almacen.Data;
 using Sistema_Almacen.Models;
+using Sistema_Almacen.Models.DTOs;
 using System.Security.Claims;
 
 namespace Sistema_Almacen.Controllers
@@ -24,66 +25,62 @@ namespace Sistema_Almacen.Controllers
             return View();
         }
 
+        /// <summary>
+        /// POST: Procesa la entrada de mercancía al almacén.
+        /// Crea un nuevo lote de inventario y registra el movimiento de auditoría.
+        /// </summary>
+        /// <param name="dto">Datos de la entrada encapsulados en DTO</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int productoId, int proveedorId, int ubicacionId, int sucursalId, int cantidad, decimal costoUnitario)
+        public async Task<IActionResult> Create(EntradaCreateDto dto)
         {
-            if (cantidad <= 0)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "La cantidad debe ser mayor a cero.");
+                await CargarCombos();
+                return View();
             }
 
-            if (costoUnitario < 0)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                ModelState.AddModelError("", "El costo unitario no puede ser negativo.");
-            }
-
-            if (ModelState.IsValid)
-            {
-                using (var transaction = await _context.Database.BeginTransactionAsync())
+                // 1. Crear el Lote de Inventario (Motor FIFO)
+                var lote = new LoteInventario
                 {
-                    try
-                    {
-                        // 1. Crear el Lote de Inventario (Motor FIFO)
-                        var lote = new LoteInventario
-                        {
-                            ProductoId = productoId,
-                            ProveedorId = proveedorId,
-                            UbicacionId = ubicacionId,
-                            SucursalId = sucursalId,
-                            CantidadInicial = cantidad,
-                            StockActual = cantidad,
-                            CostoUnitario = costoUnitario,
-                            FechaEntrada = DateTime.Now
-                        };
+                    ProductoId = dto.ProductoId,
+                    ProveedorId = dto.ProveedorId,
+                    UbicacionId = dto.UbicacionId,
+                    SucursalId = dto.SucursalId,
+                    CantidadInicial = dto.Cantidad,
+                    StockActual = dto.Cantidad,
+                    CostoUnitario = dto.CostoUnitario,
+                    FechaEntrada = DateTime.Now
+                };
 
-                        _context.LotesInventario.Add(lote);
+                _context.LotesInventario.Add(lote);
 
-                        // 2. Registrar el Movimiento de Almacén (Auditoría)
-                        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                        var movimiento = new MovimientoAlmacen
-                        {
-                            Fecha = DateTime.Now,
-                            UsuarioId = int.Parse(userId!),
-                            Tipo = TipoMovimiento.Entrada,
-                            Cantidad = cantidad,
-                            Referencia = $"Entrada de mercancía - Lote generado auto"
-                        };
+                // 2. Registrar el Movimiento de Almacén (Auditoría)
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var movimiento = new MovimientoAlmacen
+                {
+                    Fecha = DateTime.Now,
+                    UsuarioId = int.Parse(userId!),
+                    Tipo = TipoMovimiento.Entrada,
+                    Cantidad = dto.Cantidad,
+                    Referencia = $"Entrada de mercancía - Lote #{lote.Id}"
+                };
 
-                        _context.MovimientosAlmacen.Add(movimiento);
+                _context.MovimientosAlmacen.Add(movimiento);
 
-                        await _context.SaveChangesAsync();
-                        await transaction.CommitAsync();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-                        TempData["Success"] = "Lote generado correctamente. Stock actualizado.";
-                        return RedirectToAction(nameof(Create));
-                    }
-                    catch (Exception)
-                    {
-                        await transaction.RollbackAsync();
-                        ModelState.AddModelError("", "Ocurrió un error al procesar la entrada. Intente nuevamente.");
-                    }
-                }
+                TempData["Success"] = "Lote generado correctamente. Stock actualizado.";
+                return RedirectToAction(nameof(Create));
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", "Ocurrió un error al procesar la entrada. Intente nuevamente.");
             }
 
             await CargarCombos();
