@@ -1,0 +1,183 @@
+@{
+    ViewData["Title"] = "Importar Excel";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <!-- Tarjeta de Instrucciones -->
+        <div class="card shadow mb-4 border-left-primary">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-info-circle"></i> Instrucciones de Importación
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="font-weight-bold text-dark mb-3">📋 Pasos para importar inventario:</h5>
+                        <ol class="mb-0">
+                            <li class="mb-2">
+                                <strong>Descargue la plantilla</strong> haciendo clic en el botón azul.
+                            </li>
+                            <li class="mb-2">
+                                <strong>Complete los datos</strong> en Excel siguiendo el formato:
+                                <ul class="mt-2">
+                                    <li><code>SKU</code> - Código único del producto (obligatorio)</li>
+                                    <li><code>Nombre</code> - Nombre/descripción del producto</li>
+                                    <li><code>Costo</code> - Costo unitario (número positivo)</li>
+                                    <li><code>Cantidad</code> - Cantidad a ingresar</li>
+                                    <li><code>Ubicacion</code> - Código de ubicación del almacén</li>
+                                </ul>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Elimine la fila de ejemplo</strong> antes de guardar.
+                            </li>
+                            <li class="mb-2">
+                                <strong>Suba el archivo</strong> usando el formulario inferior.
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-file-excel fa-5x text-success"></i>
+                        </div>
+                        <a asp-action="DescargarPlantilla" class="btn btn-primary btn-lg">
+                            <i class="fas fa-download"></i> Descargar Plantilla
+                        </a>
+                        <p class="text-muted small mt-2">Archivo .xlsx con formato correcto</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta de Resultados -->
+        @if (ViewBag.Mensaje != null)
+        {
+            <div class="alert alert-@ViewBag.TipoMensaje alert-dismissible fade show shadow" role="alert">
+                <strong>@ViewBag.Mensaje</strong>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            @if (ViewBag.Errores != null && ((List<string>)ViewBag.Errores).Count > 0)
+            {
+                <div class="card shadow mb-4 border-left-danger">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Detalle de Errores
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Descripción del Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ int errorIndex = 1; }
+                                    @foreach (var error in (List<string>)ViewBag.Errores)
+                                    {
+                                        <tr>
+                                            <td class="text-center">@errorIndex</td>
+                                            <td>@error</td>
+                                        </tr>
+                                        errorIndex++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Tarjeta Principal de Carga -->
+        <div class="card shadow mb-4 border-left-success">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-upload"></i> Cargar Archivo Excel
+                </h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="CargarExcel" method="post" enctype="multipart/form-data" id="formImportar">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="custom-file">
+                                <input type="file" name="archivoExcel" class="custom-file-input" id="archivoExcel" accept=".xlsx" required>
+                                <label class="custom-file-label" for="archivoExcel" data-browse="Explorar">Seleccione archivo .xlsx</label>
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle"></i> Solo archivos Excel 2007+ (.xlsx). Tamaño máximo recomendado: 5MB.
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <button type="submit" class="btn btn-success btn-lg" id="btnProcesar">
+                                <i class="fas fa-cog"></i> Subir y Procesar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-question-circle"></i> Información Importante
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="h5 mb-0 font-weight-bold text-primary">
+                            <i class="fas fa-plus-circle fa-2x"></i>
+                        </div>
+                        <p class="mt-2 text-gray-800"><strong>Productos Nuevos</strong></p>
+                        <small class="text-muted">Si el SKU no existe, se creará un nuevo producto automáticamente.</small>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="h5 mb-0 font-weight-bold text-success">
+                            <i class="fas fa-boxes fa-2x"></i>
+                        </div>
+                        <p class="mt-2 text-gray-800"><strong>Lotes FIFO</strong></p>
+                        <small class="text-muted">Cada fila genera un lote de inventario con fecha de entrada actual.</small>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="h5 mb-0 font-weight-bold text-warning">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                        <p class="mt-2 text-gray-800"><strong>Auditoría</strong></p>
+                        <small class="text-muted">Todos los movimientos quedan registrados para trazabilidad.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar etiqueta del archivo seleccionado
+        document.getElementById('archivoExcel').addEventListener('change', function (e) {
+            var fileName = e.target.files[0] ? e.target.files[0].name : 'Seleccione archivo .xlsx';
+            var label = document.querySelector('.custom-file-label');
+            label.textContent = fileName;
+        });
+
+        // Mostrar spinner al procesar
+        document.getElementById('formImportar').addEventListener('submit', function () {
+            var btn = document.getElementById('btnProcesar');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            btn.disabled = true;
+        });
+    </script>
+}

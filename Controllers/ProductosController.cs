@@ -37,6 +37,9 @@ namespace Sistema_Almacen.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Producto producto, IFormFile? imagenArchivo)
         {
+            // Remover la propiedad de navegación del ModelState ya que solo necesitamos CategoriaId
+            ModelState.Remove("Categoria");
+
             if (ModelState.IsValid)
             {
                 // Validar SKU único
@@ -47,15 +50,31 @@ namespace Sistema_Almacen.Controllers
                     return View(producto);
                 }
 
-                if (imagenArchivo != null)
+                // La imagen es opcional, solo guardar si se subió
+                if (imagenArchivo != null && imagenArchivo.Length > 0)
                 {
                     producto.ImagenURL = await GuardarImagen(imagenArchivo);
                 }
 
                 _context.Add(producto);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Producto creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
+
+            // Para debugging: mostrar errores de validación en consola
+            foreach (var modelStateKey in ModelState.Keys)
+            {
+                var value = ModelState[modelStateKey];
+                if (value != null && value.Errors.Count > 0)
+                {
+                    foreach (var error in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error en '{modelStateKey}': {error.ErrorMessage}");
+                    }
+                }
+            }
+
             ViewData["CategoriaId"] = new SelectList(await _context.Categorias.ToListAsync(), "Id", "Nombre", producto.CategoriaId);
             return View(producto);
         }

@@ -51,7 +51,7 @@
                 
                 // Grupos de navegacion
                 bool isCatalogos = (new[] { "Productos", "Proveedores", "Ubicaciones" }).Contains(controller);
-                bool isOperaciones = (new[] { "Entradas", "Inventario", "Venta" }).Contains(controller) || (controller == "Home" && action == "Index");
+                bool isOperaciones = (new[] { "Entradas", "Inventario", "Venta", "Importar" }).Contains(controller) || (controller == "Home" && action == "Index");
                 bool isReportes = (new[] { "Reportes", "Movimientos", "Auditoria" }).Contains(controller);
                 bool isAdmin = (new[] { "Usuarios" }).Contains(controller);
             }
@@ -96,6 +96,7 @@
                         <a class="collapse-item @(controller == "Entradas" ? "active font-weight-bold" : "")" asp-controller="Entradas" asp-action="Create">Entradas (Compras)</a>
                         <a class="collapse-item @(controller == "Inventario" ? "active font-weight-bold" : "")" asp-controller="Inventario" asp-action="Index">Inventario FIFO</a>
                         <a class="collapse-item @(controller == "Venta" || (controller == "Home" && action == "Index") ? "active font-weight-bold" : "")" asp-controller="Home" asp-action="Index">Punto de Venta</a>
+                        <a class="collapse-item @(controller == "Importar" ? "active font-weight-bold" : "")" asp-controller="Importar" asp-action="Index">📥 Importar Excel</a>
                     </div>
                 </div>
             </li>

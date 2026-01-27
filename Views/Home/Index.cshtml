@@ -1,8 +1,495 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Salida de Material";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-shopping-cart text-primary"></i> Carrito de Requisiciones
+    </h1>
 </div>
+
+<div class="row">
+    <!-- Panel Izquierdo: Agregar Productos -->
+    <div class="col-lg-5">
+        <div class="card shadow mb-4 border-left-primary">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-plus-circle"></i> Agregar Producto al Carrito
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Seleccionar Sucursal -->
+                <div class="form-group">
+                    <label class="font-weight-bold">Sucursal de Origen <span class="text-danger">*</span></label>
+                    <select id="sucursalId" class="form-control" asp-items="ViewBag.SucursalId">
+                        <option value="">-- Seleccione Sucursal --</option>
+                    </select>
+                </div>
+
+                <!-- Seleccionar Producto -->
+                <div class="form-group">
+                    <label class="font-weight-bold">Producto <span class="text-danger">*</span></label>
+                    <select id="productoId" class="form-control" disabled>
+                        <option value="">-- Primero seleccione sucursal --</option>
+                    </select>
+                    <small id="stockInfo" class="form-text text-muted"></small>
+                </div>
+
+                <!-- Cantidad -->
+                <div class="form-group">
+                    <label class="font-weight-bold">Cantidad <span class="text-danger">*</span></label>
+                    <input type="number" id="cantidad" class="form-control" min="1" value="1" disabled>
+                    <small class="form-text text-muted">Cantidad a retirar del inventario</small>
+                </div>
+
+                <!-- Botón Agregar -->
+                <button type="button" id="btnAgregar" class="btn btn-primary btn-block" disabled>
+                    <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                </button>
+            </div>
+        </div>
+
+        <!-- Información -->
+        <div class="card shadow mb-4 bg-gradient-info text-white">
+            <div class="card-body">
+                <div class="text-white-50 small">Sistema FIFO</div>
+                <div class="mb-0">Los productos se descontarán automáticamente de los lotes más antiguos primero.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Derecho: Carrito -->
+    <div class="col-lg-7">
+        <div class="card shadow mb-4 border-left-success">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-clipboard-list"></i> Lista de Salida
+                    <span id="contadorItems" class="badge badge-pill badge-success ml-2">0</span>
+                </h6>
+                <button type="button" id="btnLimpiar" class="btn btn-outline-danger btn-sm" style="display: none;">
+                    <i class="fas fa-trash"></i> Vaciar
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Tabla del Carrito -->
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover" id="tablaCarrito">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width: 40%;">Producto</th>
+                                <th class="text-center" style="width: 15%;">Cantidad</th>
+                                <th style="width: 25%;">Sucursal</th>
+                                <th class="text-center" style="width: 20%;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="carritoBody">
+                            <tr id="filaVacia">
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    El carrito está vacío.<br>
+                                    <small>Agregue productos usando el panel izquierdo.</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+
+                <!-- Referencia / Proyecto -->
+                <div class="form-group">
+                    <label class="font-weight-bold">
+                        <i class="fas fa-tag"></i> Referencia / Proyecto
+                    </label>
+                    <input type="text" id="referencia" class="form-control" 
+                           placeholder="Ej: Mantenimiento Línea 1, Orden de Trabajo #123">
+                    <small class="form-text text-muted">Opcional: Identifica el motivo de la salida</small>
+                </div>
+
+                <!-- Botón Procesar -->
+                <button type="button" id="btnProcesar" class="btn btn-success btn-lg btn-block" disabled>
+                    <i class="fas fa-check-circle"></i> Confirmar Salida de Material
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle"></i> Requisición Procesada</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="location.reload()">
+                    <i class="fas fa-plus"></i> Nueva Requisición
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // =====================================================
+        // CARRITO DE REQUISICIONES - JavaScript
+        // =====================================================
+
+        // Array para almacenar los items del carrito
+        let carrito = [];
+
+        // Cache de productos por sucursal
+        let productosCache = {};
+
+        // =====================================================
+        // EVENTOS
+        // =====================================================
+
+        $(document).ready(function () {
+            // Cargar productos al cambiar sucursal
+            $('#sucursalId').on('change', function () {
+                cargarProductosPorSucursal($(this).val());
+            });
+
+            // Verificar stock al seleccionar producto
+            $('#productoId').on('change', function () {
+                const productoId = $(this).val();
+                const sucursalId = $('#sucursalId').val();
+                if (productoId && sucursalId) {
+                    verificarStock(productoId, sucursalId);
+                    $('#cantidad').prop('disabled', false);
+                    $('#btnAgregar').prop('disabled', false);
+                }
+            });
+
+            // Agregar al carrito
+            $('#btnAgregar').on('click', agregarAlCarrito);
+
+            // Procesar requisición
+            $('#btnProcesar').on('click', procesarRequisicion);
+
+            // Limpiar carrito
+            $('#btnLimpiar').on('click', limpiarCarrito);
+
+            // Enter en cantidad agrega al carrito
+            $('#cantidad').on('keypress', function (e) {
+                if (e.which === 13) {
+                    agregarAlCarrito();
+                }
+            });
+        });
+
+        // =====================================================
+        // FUNCIONES DE CARGA
+        // =====================================================
+
+        function cargarProductosPorSucursal(sucursalId) {
+            const selectProducto = $('#productoId');
+            selectProducto.html('<option value="">Cargando...</option>').prop('disabled', true);
+            $('#cantidad').prop('disabled', true);
+            $('#btnAgregar').prop('disabled', true);
+            $('#stockInfo').text('');
+
+            if (!sucursalId) {
+                selectProducto.html('<option value="">-- Primero seleccione sucursal --</option>');
+                return;
+            }
+
+            $.get('@Url.Action("ObtenerProductosConStock", "Home")', { sucursalId: sucursalId })
+                .done(function (data) {
+                    productosCache[sucursalId] = data;
+                    selectProducto.html('<option value="">-- Seleccione Producto --</option>');
+
+                    if (data.length === 0) {
+                        selectProducto.html('<option value="">Sin productos con stock</option>');
+                        return;
+                    }
+
+                    data.forEach(function (p) {
+                        selectProducto.append(
+                            `<option value="${p.id}" data-stock="${p.stockDisponible}" data-sku="${p.sku}" data-nombre="${p.nombre}">
+                                ${p.sku} - ${p.nombre} (Stock: ${p.stockDisponible})
+                            </option>`
+                        );
+                    });
+
+                    selectProducto.prop('disabled', false);
+                })
+                .fail(function () {
+                    selectProducto.html('<option value="">Error al cargar productos</option>');
+                });
+        }
+
+        function verificarStock(productoId, sucursalId) {
+            $.get('@Url.Action("VerificarStock", "Home")', { productoId: productoId, sucursalId: sucursalId })
+                .done(function (data) {
+                    $('#stockInfo').html(
+                        `<span class="text-success"><i class="fas fa-boxes"></i> Stock disponible: <strong>${data.stockDisponible}</strong></span>`
+                    );
+                    $('#cantidad').attr('max', data.stockDisponible);
+                });
+        }
+
+        // =====================================================
+        // FUNCIONES DEL CARRITO
+        // =====================================================
+
+        function agregarAlCarrito() {
+            const sucursalId = parseInt($('#sucursalId').val());
+            const sucursalNombre = $('#sucursalId option:selected').text();
+            const productoId = parseInt($('#productoId').val());
+            const productoOption = $('#productoId option:selected');
+            const productoNombre = productoOption.data('nombre');
+            const sku = productoOption.data('sku');
+            const stockDisponible = parseInt(productoOption.data('stock'));
+            const cantidad = parseInt($('#cantidad').val());
+
+            // Validaciones
+            if (!sucursalId || !productoId) {
+                Swal.fire('Error', 'Seleccione sucursal y producto.', 'error');
+                return;
+            }
+
+            if (!cantidad || cantidad <= 0) {
+                Swal.fire('Error', 'La cantidad debe ser mayor a 0.', 'error');
+                return;
+            }
+
+            // Verificar si ya existe en el carrito
+            const itemExistente = carrito.find(i => i.productoId === productoId && i.sucursalId === sucursalId);
+            const cantidadEnCarrito = itemExistente ? itemExistente.cantidad : 0;
+
+            if (cantidadEnCarrito + cantidad > stockDisponible) {
+                Swal.fire('Stock Insuficiente',
+                    `Solo hay ${stockDisponible} unidades disponibles. Ya tienes ${cantidadEnCarrito} en el carrito.`,
+                    'warning');
+                return;
+            }
+
+            if (itemExistente) {
+                // Actualizar cantidad existente
+                itemExistente.cantidad += cantidad;
+            } else {
+                // Agregar nuevo item
+                carrito.push({
+                    productoId: productoId,
+                    productoNombre: productoNombre,
+                    sku: sku,
+                    cantidad: cantidad,
+                    sucursalId: sucursalId,
+                    sucursalNombre: sucursalNombre,
+                    stockDisponible: stockDisponible
+                });
+            }
+
+            actualizarTablaCarrito();
+
+            // Limpiar selección
+            $('#productoId').val('');
+            $('#cantidad').val(1).prop('disabled', true);
+            $('#btnAgregar').prop('disabled', true);
+            $('#stockInfo').text('');
+
+            // Feedback visual
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Producto agregado',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        function eliminarDelCarrito(index) {
+            carrito.splice(index, 1);
+            actualizarTablaCarrito();
+        }
+
+        function actualizarTablaCarrito() {
+            const tbody = $('#carritoBody');
+            tbody.empty();
+
+            if (carrito.length === 0) {
+                tbody.html(`
+                    <tr id="filaVacia">
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            El carrito está vacío.<br>
+                            <small>Agregue productos usando el panel izquierdo.</small>
+                        </td>
+                    </tr>
+                `);
+                $('#btnProcesar').prop('disabled', true);
+                $('#btnLimpiar').hide();
+            } else {
+                carrito.forEach(function (item, index) {
+                    tbody.append(`
+                        <tr>
+                            <td>
+                                <span class="badge badge-secondary">${item.sku}</span><br>
+                                <strong>${item.productoNombre}</strong>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge badge-primary badge-pill" style="font-size: 1.1em;">${item.cantidad}</span>
+                            </td>
+                            <td class="align-middle">
+                                <small class="text-muted"><i class="fas fa-warehouse"></i> ${item.sucursalNombre}</small>
+                            </td>
+                            <td class="text-center align-middle">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                });
+                $('#btnProcesar').prop('disabled', false);
+                $('#btnLimpiar').show();
+            }
+
+            // Actualizar contador
+            $('#contadorItems').text(carrito.length);
+        }
+
+        function limpiarCarrito() {
+            Swal.fire({
+                title: '¿Vaciar carrito?',
+                text: 'Se eliminarán todos los productos de la lista.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, vaciar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    carrito = [];
+                    actualizarTablaCarrito();
+                }
+            });
+        }
+
+        // =====================================================
+        // PROCESAR REQUISICIÓN
+        // =====================================================
+
+        function procesarRequisicion() {
+            if (carrito.length === 0) {
+                Swal.fire('Error', 'El carrito está vacío.', 'error');
+                return;
+            }
+
+            const referencia = $('#referencia').val().trim();
+
+            Swal.fire({
+                title: '¿Confirmar salida de material?',
+                html: `Se procesarán <strong>${carrito.length}</strong> producto(s).<br>
+                       ${referencia ? `<small class="text-muted">Referencia: ${referencia}</small>` : ''}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check"></i> Confirmar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    enviarRequisicion(referencia);
+                }
+            });
+        }
+
+        function enviarRequisicion(referencia) {
+            // Preparar datos
+            const requisicion = {
+                items: carrito.map(item => ({
+                    productoId: item.productoId,
+                    productoNombre: item.productoNombre,
+                    sku: item.sku,
+                    cantidad: item.cantidad,
+                    sucursalId: item.sucursalId,
+                    sucursalNombre: item.sucursalNombre
+                })),
+                referencia: referencia
+            };
+
+            // Mostrar loading
+            Swal.fire({
+                title: 'Procesando...',
+                html: 'Por favor espere mientras se procesa la requisición.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Enviar al servidor
+            $.ajax({
+                url: '@Url.Action("ProcesarRequisicion", "Home")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requisicion),
+                success: function (response) {
+                    Swal.close();
+
+                    if (response.success) {
+                        // Éxito
+                        let itemsHtml = '<ul class="list-unstyled">';
+                        response.itemsProcesados.forEach(item => {
+                            itemsHtml += `<li><i class="fas fa-check text-success"></i> ${item}</li>`;
+                        });
+                        itemsHtml += '</ul>';
+
+                        $('#modalBody').html(`
+                            <div class="text-center mb-3">
+                                <i class="fas fa-check-circle fa-4x text-success"></i>
+                            </div>
+                            <h5 class="text-center">${response.message}</h5>
+                            ${response.referencia ? `<p class="text-center text-muted">Referencia: ${response.referencia}</p>` : ''}
+                            <hr>
+                            <h6>Productos despachados:</h6>
+                            ${itemsHtml}
+                        `);
+                        $('#modalConfirmacion').modal('show');
+
+                        // Limpiar carrito
+                        carrito = [];
+                        actualizarTablaCarrito();
+                        $('#referencia').val('');
+
+                    } else {
+                        // Error
+                        let erroresHtml = '';
+                        if (response.errores && response.errores.length > 0) {
+                            erroresHtml = '<ul class="text-danger">';
+                            response.errores.forEach(err => {
+                                erroresHtml += `<li>${err}</li>`;
+                            });
+                            erroresHtml += '</ul>';
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al procesar',
+                            html: `${response.message}<br>${erroresHtml}`
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
+                    console.error('Error:', error);
+                }
+            });
+        }
+    </script>
+}
