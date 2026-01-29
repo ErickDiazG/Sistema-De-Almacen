@@ -1,0 +1,137 @@
+@model Sistema_Almacen.Models.Prestamo
+
+@{
+    ViewData["Title"] = "Nuevo Préstamo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-hand-holding"></i> Registrar Nuevo Préstamo de Activo
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.MostrarTodos == true)
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Nota:</strong> No hay productos marcados como "Activo Fijo". 
+                        Se muestran todos los productos con stock disponible.
+                    </div>
+                }
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <!-- Producto/Activo -->
+                    <div class="form-group">
+                        <label asp-for="ProductoId" class="font-weight-bold">
+                            <i class="fas fa-tools"></i> Activo/Herramienta <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="ProductoId" class="form-control" asp-items="ViewBag.ProductoId" required>
+                            <option value="">-- Seleccione el activo --</option>
+                        </select>
+                        <span asp-validation-for="ProductoId" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Cantidad -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Cantidad" class="font-weight-bold">
+                                    <i class="fas fa-sort-numeric-up"></i> Cantidad <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" required />
+                                <span asp-validation-for="Cantidad" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Fecha Esperada de Regreso -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="FechaEsperadaRegreso" class="font-weight-bold">
+                                    <i class="fas fa-calendar-alt"></i> Fecha Límite de Devolución
+                                </label>
+                                <input asp-for="FechaEsperadaRegreso" class="form-control" type="date" 
+                                       value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
+                                <small class="form-text text-muted">Por defecto: 7 días</small>
+                                <span asp-validation-for="FechaEsperadaRegreso" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="font-weight-bold text-gray-800"><i class="fas fa-user"></i> Datos del Solicitante</h6>
+
+                    <div class="row">
+                        <!-- Solicitante -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="UsuarioSolicitante" class="font-weight-bold">
+                                    Nombre del Solicitante <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="UsuarioSolicitante" class="form-control" 
+                                       placeholder="Ej: Juan Pérez" required />
+                                <span asp-validation-for="UsuarioSolicitante" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Departamento -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Departamento" class="font-weight-bold">
+                                    Departamento/Área
+                                </label>
+                                <input asp-for="Departamento" class="form-control" 
+                                       placeholder="Ej: Mantenimiento" />
+                                <span asp-validation-for="Departamento" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comentarios -->
+                    <div class="form-group">
+                        <label asp-for="Comentarios" class="font-weight-bold">
+                            <i class="fas fa-comment"></i> Comentarios / Motivo del Préstamo
+                        </label>
+                        <textarea asp-for="Comentarios" class="form-control" rows="3" 
+                                  placeholder="Ej: Reparación de maquinaria en Línea 2"></textarea>
+                        <span asp-validation-for="Comentarios" class="text-danger"></span>
+                    </div>
+
+                    <hr>
+
+                    <!-- Botones -->
+                    <div class="form-group mb-0">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check"></i> Registrar Préstamo
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Información -->
+        <div class="card shadow mb-4 bg-light">
+            <div class="card-body">
+                <h6 class="font-weight-bold"><i class="fas fa-info-circle text-info"></i> Información Importante</h6>
+                <ul class="mb-0">
+                    <li>El stock se descontará automáticamente al registrar el préstamo.</li>
+                    <li>La fecha límite por defecto es de <strong>7 días</strong>.</li>
+                    <li>Los préstamos que excedan la fecha límite aparecerán como <span class="badge badge-danger">ATRASADOS</span>.</li>
+                    <li>Al devolver el activo, el stock se reintegrará al inventario.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -9,25 +9,35 @@ namespace Sistema_Almacen.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "El nombre del producto es obligatorio")]
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres")]
         public string Nombre { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El SKU es obligatorio")]
-        [StringLength(50)]
+        [StringLength(50, ErrorMessage = "El SKU no puede exceder los 50 caracteres")]
         public string SKU { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El stock mínimo es obligatorio")]
+        [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo debe ser mayor o igual a 0")]
         public int StockMinimo { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
+        [Range(0, double.MaxValue, ErrorMessage = "El precio de venta debe ser mayor o igual a 0")]
         public decimal PrecioVenta { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
+        [Range(0, double.MaxValue, ErrorMessage = "El costo promedio debe ser mayor o igual a 0")]
         public decimal CostoPromedio { get; set; }
 
+        [Display(Name = "Imagen URL")]
         public string? ImagenURL { get; set; }
 
-        [Required]
+        /// <summary>
+        /// Indica si el producto es un activo fijo (herramienta, laptop, etc.) que puede ser prestado
+        /// </summary>
+        [Display(Name = "Es Activo Fijo")]
+        public bool EsActivoFijo { get; set; } = false;
+
+        [Required(ErrorMessage = "La categoría es obligatoria")]
         public int CategoriaId { get; set; }
 
         // Navegación
@@ -35,5 +45,7 @@ namespace Sistema_Almacen.Models
         public virtual Categoria Categoria { get; set; } = null!;
 
         public virtual ICollection<LoteInventario> Lotes { get; set; } = new List<LoteInventario>();
+
+        public virtual ICollection<Prestamo> Prestamos { get; set; } = new List<Prestamo>();
     }
 }

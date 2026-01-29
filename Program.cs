@@ -16,6 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Registrar servicios de negocio
 builder.Services.AddScoped<IVentaService, VentaService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
 
 // ===== CONFIGURAR AUTENTICACIÓN CON COOKIES =====
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -50,8 +51,8 @@ using (var scope = app.Services.CreateScope())
         // ⚠️ SOLO PARA DESARROLLO: Descomentar la siguiente línea para resetear la BD
         // context.Database.EnsureDeleted();
         
-        // Crear la base de datos si no existe (no borra datos existentes)
-        context.Database.EnsureCreated(); 
+        // Aplicar migraciones pendientes (Esto creará la BD si no existe y evitará errores de esquema)
+        context.Database.Migrate(); 
 
         // 1. Seed Categorías (REQUERIDO por Producto)
         if (!context.Categorias.Any())

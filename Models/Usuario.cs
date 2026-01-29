@@ -21,6 +21,13 @@ namespace Sistema_Almacen.Models
         public string NombreUsuario { get; set; }
 
         /// <summary>
+        /// Nombre completo del empleado o estudiante
+        /// </summary>
+        [Required(ErrorMessage = "El nombre completo es obligatorio")]
+        [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
+        public string Nombre { get; set; } = string.Empty;
+
+        /// <summary>
         /// Contraseña del usuario (en texto plano por ahora - solo para pruebas)
         /// NOTA: En producción, esto debe estar hasheado (ej. con BCrypt o Identity)
         /// </summary>

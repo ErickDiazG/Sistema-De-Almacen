@@ -32,9 +32,16 @@ namespace Sistema_Almacen.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(proveedor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(proveedor);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al guardar: " + ex.Message);
+                }
             }
             return View(proveedor);
         }
@@ -85,9 +92,16 @@ namespace Sistema_Almacen.Controllers
                 return Json(new { success = false, message = "No se puede eliminar porque tiene lotes de mercancía asociados." });
             }
 
-            _context.Proveedores.Remove(proveedor);
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Proveedor eliminado correctamente." });
+            try
+            {
+                _context.Proveedores.Remove(proveedor);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Proveedor eliminado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar: " + ex.Message });
+            }
         }
     }
 }

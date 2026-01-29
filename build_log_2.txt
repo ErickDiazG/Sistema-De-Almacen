@@ -1,0 +1,13 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est??n actualizados para la restauraci??n.
+C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Controllers\PrestamosController.cs(15,26): error CS0246: El nombre del tipo o del espacio de nombres 'IInventarioService' no se encontr?? (??falta una directiva using o una referencia de ensamblado?) [C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Sistema Almacen.csproj]
+C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Controllers\PrestamosController.cs(17,66): error CS0246: El nombre del tipo o del espacio de nombres 'IInventarioService' no se encontr?? (??falta una directiva using o una referencia de ensamblado?) [C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Sistema Almacen.csproj]
+
+ERROR al compilar.
+
+C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Controllers\PrestamosController.cs(15,26): error CS0246: El nombre del tipo o del espacio de nombres 'IInventarioService' no se encontr?? (??falta una directiva using o una referencia de ensamblado?) [C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Sistema Almacen.csproj]
+C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Controllers\PrestamosController.cs(17,66): error CS0246: El nombre del tipo o del espacio de nombres 'IInventarioService' no se encontr?? (??falta una directiva using o una referencia de ensamblado?) [C:\Users\LENOVO\OneDrive\Documentos\Universidad Tamaulipeca\8ISC\Sistema Almacen\Sistema Almacen.csproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:09.32

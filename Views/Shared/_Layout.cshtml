@@ -51,7 +51,7 @@
                 
                 // Grupos de navegacion
                 bool isCatalogos = (new[] { "Productos", "Proveedores", "Ubicaciones" }).Contains(controller);
-                bool isOperaciones = (new[] { "Entradas", "Inventario", "Venta", "Importar" }).Contains(controller) || (controller == "Home" && action == "Index");
+                bool isOperaciones = (new[] { "Entradas", "Inventario", "Venta", "Importar", "Prestamos" }).Contains(controller) || (controller == "Home" && action == "Index");
                 bool isReportes = (new[] { "Reportes", "Movimientos", "Auditoria" }).Contains(controller);
                 bool isAdmin = (new[] { "Usuarios" }).Contains(controller);
             }
@@ -97,6 +97,7 @@
                         <a class="collapse-item @(controller == "Inventario" ? "active font-weight-bold" : "")" asp-controller="Inventario" asp-action="Index">Inventario FIFO</a>
                         <a class="collapse-item @(controller == "Venta" || (controller == "Home" && action == "Index") ? "active font-weight-bold" : "")" asp-controller="Home" asp-action="Index">Punto de Venta</a>
                         <a class="collapse-item @(controller == "Importar" ? "active font-weight-bold" : "")" asp-controller="Importar" asp-action="Index">📥 Importar Excel</a>
+                        <a class="collapse-item @(controller == "Prestamos" ? "active font-weight-bold" : "")" asp-controller="Prestamos" asp-action="Index">🔧 Préstamos</a>
                     </div>
                 </div>
             </li>
@@ -110,8 +111,9 @@
                 </a>
                 <div id="collapseReportes" class="collapse @(isReportes ? "show" : "")" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item @(controller == "Reportes" && action == "Index" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Index">Historial Movimientos</a>
                         <a class="collapse-item @(controller == "Reportes" && action == "Auditoria" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Auditoria">Auditoría</a>
+                        <a class="collapse-item @(controller == "Reportes" && action == "Index" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Index">Historial de Movimientos</a>
+                        <a class="collapse-item @(controller == "Reportes" && action == "Graficos" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Graficos">Ver Reportes (Gráficos)</a>
                     </div>
                 </div>
             </li>

@@ -12,10 +12,12 @@ namespace Sistema_Almacen.Services
     public class VentaService : IVentaService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IInventarioService _inventarioService;
 
-        public VentaService(ApplicationDbContext context)
+        public VentaService(ApplicationDbContext context, IInventarioService inventarioService)
         {
             _context = context;
+            _inventarioService = inventarioService;
         }
 
         public async Task ProcesarVentaFIFO(int sucursalId, int productoId, int cantidad)
@@ -24,23 +26,12 @@ namespace Sistema_Almacen.Services
             {
                 try
                 {
-                    // 1. Buscar lotes disponibles ordenados por FechaEntrada (FIFO)
-                    var lotes = await _context.LotesInventario
-                        .Where(l => l.ProductoId == productoId && l.SucursalId == sucursalId && l.StockActual > 0)
-                        .OrderBy(l => l.FechaEntrada)
-                        .ToListAsync();
+                    // 1. Usar el servicio de inventario para descontar stock FIFO
+                    await _inventarioService.DescontarStockFIFO(productoId, cantidad, sucursalId);
 
-                    int stockTotal = lotes.Sum(l => l.StockActual);
-
-                    if (stockTotal < cantidad)
-                    {
-                        throw new Exception($"Stock insuficiente. Requerido: {cantidad}, Disponible: {stockTotal}");
-                    }
-
-                    int cantidadRestante = cantidad;
                     decimal totalVenta = 0;
 
-                    // 2. Buscar el producto una sola vez
+                    // 2. Buscar el producto para obtener precio
                     var producto = await _context.Productos.FindAsync(productoId);
                     if (producto == null) throw new Exception("Producto no encontrado");
 
@@ -53,33 +44,27 @@ namespace Sistema_Almacen.Services
                     _context.Ventas.Add(venta);
                     await _context.SaveChangesAsync();
 
-                    // 4. Iterar sobre los lotes para restar el stock
-                    foreach (var lote in lotes)
+                    // 4. Crear detalle de venta (Simplificado ya que el stock se descontó globalmente)
+                    // Nota: Si se requiere rastrear qué lotes específicos se vendieron en el detalle, 
+                    // el servicio de inventario debería devolver esa información. 
+                    // Por ahora asumimos que solo necesitamos registrar que se vendió tal producto a tal precio.
+                    
+                    var detalle = new DetalleVenta
                     {
-                        if (cantidadRestante <= 0) break;
+                        VentaId = venta.Id,
+                        ProductoId = productoId,
+                        Cantidad = cantidad,
+                        PrecioUnitario = producto.PrecioVenta
+                    };
+                    _context.DetallesVenta.Add(detalle);
+                    
+                    totalVenta = detalle.Cantidad * detalle.PrecioUnitario;
 
-                        int cantidadASacar = Math.Min(lote.StockActual, cantidadRestante);
-                        
-                        lote.StockActual -= cantidadASacar;
-                        cantidadRestante -= cantidadASacar;
-                        
-                        var detalle = new DetalleVenta
-                        {
-                            VentaId = venta.Id,
-                            ProductoId = productoId,
-                            Cantidad = cantidadASacar,
-                            PrecioUnitario = producto.PrecioVenta
-                        };
-                        _context.DetallesVenta.Add(detalle);
-                        
-                        totalVenta += detalle.Cantidad * detalle.PrecioUnitario;
-                    }
-
-                    // 4. Actualizar el total de la venta
+                    // 5. Actualizar el total de la venta
                     venta.Total = totalVenta;
                     await _context.SaveChangesAsync();
 
-                    // 5. Confirmar transacción
+                    // 6. Confirmar transacción
                     await transaction.CommitAsync();
                 }
                 catch (Exception)

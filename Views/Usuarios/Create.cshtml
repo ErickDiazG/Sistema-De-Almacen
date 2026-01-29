@@ -1,0 +1,63 @@
+@model Sistema_Almacen.Models.Usuario
+
+@{
+    ViewData["Title"] = "Nuevo Usuario";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Registrar Nuevo Usuario</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Nombre" class="control-label font-weight-bold">Nombre Completo</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Juan Pérez" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NombreUsuario" class="control-label font-weight-bold">No. Empleado / ID Usuario</label>
+                        <input asp-for="NombreUsuario" class="form-control" placeholder="Ej: 12345" />
+                        <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Rol" class="control-label font-weight-bold">Rol en el Sistema</label>
+                        <select asp-for="Rol" class="form-control">
+                            <option value="">-- Seleccionar Rol --</option>
+                            <option value="Admin">Administrador</option>
+                            <option value="Empleado">Empleado</option>
+                        </select>
+                        <span asp-validation-for="Rol" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password" class="control-label font-weight-bold">Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Contraseña segura" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <hr>
+                    <div class="form-group mb-0">
+                        <button type="submit" class="btn btn-primary btn-user btn-block">
+                            <i class="fas fa-save"></i> Guardar Usuario
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary btn-user btn-block">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

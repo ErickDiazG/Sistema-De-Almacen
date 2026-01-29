@@ -56,10 +56,17 @@ namespace Sistema_Almacen.Controllers
                     producto.ImagenURL = await GuardarImagen(imagenArchivo);
                 }
 
-                _context.Add(producto);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Producto creado exitosamente.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(producto);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Producto creado exitosamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al guardar el producto: " + ex.Message);
+                }
             }
 
             // Para debugging: mostrar errores de validación en consola
@@ -147,10 +154,17 @@ namespace Sistema_Almacen.Controllers
                 return Json(new { success = false, message = "No se puede eliminar porque tiene existencias en inventario." });
             }
 
-            BorrarImagen(producto.ImagenURL);
-            _context.Productos.Remove(producto);
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Producto eliminado correctamente." });
+            try
+            {
+                BorrarImagen(producto.ImagenURL);
+                _context.Productos.Remove(producto);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Producto eliminado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar: " + ex.Message });
+            }
         }
 
         private async Task<string> GuardarImagen(IFormFile archivo)
@@ -169,7 +183,7 @@ namespace Sistema_Almacen.Controllers
                 await archivo.CopyToAsync(fileStream);
             }
 
-            return @"\img\productos\" + fileName;
+            return "/img/productos/" + fileName;
         }
 
         private void BorrarImagen(string? url)

@@ -55,6 +55,20 @@
                                     <span asp-validation-for="StockMinimo" class="text-danger"></span>
                                 </div>
                             </div>
+
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <div class="custom-control custom-checkbox small">
+                                        <input type="checkbox" class="custom-control-input" asp-for="EsActivoFijo">
+                                        <label class="custom-control-label font-weight-bold" asp-for="EsActivoFijo">
+                                            Es Activo Fijo (Puede prestarse)
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            Marca esta opción si este producto es una herramienta o equipo que se presta a empleados.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="col-md-4 text-center">

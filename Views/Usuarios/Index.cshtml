@@ -7,9 +7,9 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">Usuarios del Sistema</h6>
-        <button class="btn btn-primary btn-sm disabled">
-            <i class="fas fa-user-plus"></i> Nuevo Usuario (Próximamente)
-        </button>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-user-plus"></i> Nuevo Usuario
+        </a>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -17,9 +17,9 @@
                 <thead class="thead-light">
                     <tr>
                         <th class="text-center">Avatar</th>
-                        <th>Nombre de Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>No. Empleado / Usuario</th>
                         <th>Rol</th>
-                        <th>Email (Simulado)</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -27,7 +27,7 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="text-center">
+                            <td class="text-center align-middle">
                                 @if (item.Rol == "Admin")
                                 {
                                     <img src="~/img/profile-user.jpg" class="rounded-circle" style="width: 40px; height: 40px;" alt="Avatar">
@@ -37,18 +37,18 @@
                                     <img src="~/img/profile-admin.png" class="rounded-circle" style="width: 40px; height: 40px;" alt="Avatar">
                                 }
                             </td>
-                            <td class="font-weight-bold">@item.NombreUsuario</td>
-                            <td>
-                                <span class="badge @(item.Rol == "Admin" ? "badge-dark" : "badge-info") text-uppercase">
+                            <td class="align-middle font-weight-bold">@item.Nombre</td>
+                            <td class="align-middle">@item.NombreUsuario</td>
+                            <td class="align-middle">
+                                <span class="badge @(item.Rol == "Admin" ? "badge-dark" : "badge-info") text-uppercase p-2">
                                     @item.Rol
                                 </span>
                             </td>
-                            <td>@(item.NombreUsuario)@("@smdg.com.mx")</td>
-                            <td class="text-center">
-                                <button class="btn btn-warning btn-circle btn-sm disabled">
+                            <td class="text-center align-middle">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm" title="Editar">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger btn-circle btn-sm disabled">
+                                </a>
+                                <button onclick="confirmarEliminar(@item.Id, '@item.NombreUsuario')" class="btn btn-danger btn-circle btn-sm" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
@@ -59,3 +59,40 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmarEliminar(id, nombre) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Se eliminará el usuario " + nombre,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Usuarios/Delete/' + id, function(data) {
+                        if (data.success) {
+                            Swal.fire(
+                                'Eliminado!',
+                                data.message,
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message,
+                                'error'
+                            );
+                        }
+                    });
+                }
+            })
+        }
+    </script>
+}
