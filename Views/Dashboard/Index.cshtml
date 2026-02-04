@@ -1,19 +1,21 @@
 @model Sistema_Almacen.Models.ViewModels.DashboardViewModel
+@using System.Globalization
 @{
     ViewData["Title"] = "Dashboard";
+    var cultureMX = new CultureInfo("es-MX");
 }
 
 <!-- Page Heading -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Dashboard de Almacén</h1>
+    <h1 class="h3 mb-0 text-gray-800">Dashboard General</h1>
     <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
             class="fas fa-download fa-sm text-white-50"></i> Generar Reporte</a>
 </div>
 
-<!-- Content Row -->
+<!-- KPI Row -->
 <div class="row">
 
-    <!-- Total Productos Card -->
+    <!-- Total Productos -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
@@ -31,7 +33,7 @@
         </div>
     </div>
 
-    <!-- Valor Inventario Card -->
+    <!-- Valor Inventario (MXN) -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
@@ -39,7 +41,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Valor Inventario</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ValorInventario.ToString("C")</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ValorInventario.ToString("C", cultureMX)</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -49,40 +51,38 @@
         </div>
     </div>
 
-    <!-- Ventas Hoy Card -->
+    <!-- ALERT: Préstamos Vencidos -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Ventas (Hoy)
+        <a asp-controller="Prestamos" asp-action="Index" asp-route-filtro="atrasados" class="text-decoration-none">
+            <div class="card border-left-danger shadow h-100 py-2 bg-gradient-danger-soft" style="@(Model.TotalPrestamosVencidos > 0 ? "background-color: #fff5f5; border-color: #e74a3b !important;" : "border-left-secondary")">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                PRÉSTAMOS VENCIDOS (>3 Días)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 text-danger">@Model.TotalPrestamosVencidos</div>
                         </div>
-                        <div class="row no-gutters align-items-center">
-                            <div class="col-auto">
-                                <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">@Model.VentasHoy</div>
-                            </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 
-    <!-- Stock Bajo Card -->
+    <!-- Stock Bajo -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Productos Stock Bajo</div>
+                            Stock Bajo (Alerta)</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ProductosStockBajo</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -90,70 +90,128 @@
     </div>
 </div>
 
-<!-- Content Row -->
+<!-- Main Row: Gráfica + Acciones -->
 <div class="row">
-    <!-- Bienvenida Card -->
-    <div class="col-xl-8 col-lg-7 mb-4">
+
+    <!-- Area Chart -->
+    <div class="col-xl-8 col-lg-7">
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Resumen de Usuario</h6>
+            <!-- Card Header - Dropdown -->
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Comparativa: Entradas vs Salidas (7 Días)</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                </div>
             </div>
+            <!-- Card Body -->
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col-auto mr-3">
-                        @if (ViewBag.Rol == "Admin")
-                        {
-                            <img src="~/img/profile-user.jpg" alt="Admin" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
-                        }
-                        else
-                        {
-                            <img src="~/img/profile-admin.png" alt="Usuario" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
-                        }
-                    </div>
-                    <div class="col">
-                        <div class="h4 mb-1 font-weight-bold text-gray-800">
-                            @(ViewBag.Rol == "Admin" ? "Ing. Alexander Sosa" : "Erick Diaz")
-                        </div>
-                        <div class="text-sm text-gray-600 mb-1">
-                            Usuario: <strong>@ViewBag.NombreUsuario</strong> | Rol: <span class="badge badge-@(ViewBag.Rol == "Admin" ? "success" : "info")">@ViewBag.Rol</span>
-                        </div>
-                        <p class="mt-2">Bienvenido de nuevo al sistema SMDG. Aquí puedes monitorear el estado actual de tu almacén de forma rápida.</p>
-                    </div>
+                <div class="chart-area">
+                    <canvas id="myAreaChart"></canvas>
                 </div>
             </div>
         </div>
-        
-        <!-- Productos Recientes -->
+    </div>
+
+    <!-- Quick Actions Panel -->
+    <div class="col-xl-4 col-lg-5">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Productos Agregados Recientemente</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Acciones Rápidas</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-4 small text-gray-600">Accesos directos a las funciones más utilizadas del sistema.</p>
+                
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-block mb-3 py-3 font-weight-bold">
+                    <i class="fas fa-cash-register fa-lg mr-2"></i> NUEVA VENTA
+                </a>
+                
+                <a asp-controller="Prestamos" asp-action="Create" class="btn btn-danger btn-block mb-3">
+                    <i class="fas fa-hand-holding fa-sm mr-2"></i> Registrar Préstamo
+                </a>
+
+                <div class="row">
+                    <div class="col-6">
+                        <a asp-controller="Entradas" asp-action="Create" class="btn btn-success btn-block mb-3">
+                            <i class="fas fa-truck-loading fa-sm"></i> Entrada
+                        </a>
+                    </div>
+                    <div class="col-6">
+                         <a asp-controller="Inventario" asp-action="Index" class="btn btn-info btn-block mb-3">
+                            <i class="fas fa-boxes fa-sm"></i> Stock
+                        </a>
+                    </div>
+                </div>
+
+                @if (ViewBag.Rol == "Admin")
+                {
+                    <hr>
+                    <a asp-controller="Reportes" asp-action="Index" class="btn btn-light btn-block border">
+                        <i class="fas fa-chart-bar fa-sm mr-2"></i> Ver Reportes Avanzados
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Tabla Últimos Movimientos -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Últimos Movimientos Registrados</h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
+                    <table class="table table-bordered table-striped table-hover" width="100%" cellspacing="0">
+                        <thead class="thead-dark">
                             <tr>
-                                <th>Nombre</th>
-                                <th>SKU</th>
-                                <th>Precio</th>
+                                <th>Fecha/Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción / Ref</th>
+                                <th>Usuario</th>
+                                <th class="text-right">Cantidad</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.ProductosRecientes != null && Model.ProductosRecientes.Any())
+                            @if (Model.UltimosMovimientos != null && Model.UltimosMovimientos.Any())
                             {
-                                foreach (var p in Model.ProductosRecientes)
+                                foreach (var m in Model.UltimosMovimientos)
                                 {
+                                    string claseBadge = m.Tipo switch
+                                    {
+                                        Sistema_Almacen.Models.TipoMovimiento.Entrada => "success",
+                                        Sistema_Almacen.Models.TipoMovimiento.Salida => "danger",
+                                        _ => "warning"
+                                    };
+
                                     <tr>
-                                        <td>@p.Nombre</td>
-                                        <td>@p.SKU</td>
-                                        <td>@p.PrecioVenta.ToString("C")</td>
+                                        <td style="font-size: 0.9em;">@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <span class="badge badge-@claseBadge">@m.Tipo</span>
+                                        </td>
+                                        <td>@m.Referencia</td>
+                                        <td class="small">@(m.Usuario?.Nombre ?? "Sistema")</td>
+                                        <td class="text-right font-weight-bold">
+                                            @if(m.Tipo == Sistema_Almacen.Models.TipoMovimiento.Salida)
+                                            {
+                                                <span class="text-danger">-@m.Cantidad</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-success">+@m.Cantidad</span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="3" class="text-center">No hay productos registrados</td>
+                                    <td colspan="5" class="text-center text-muted">No hay movimientos recientes.</td>
                                 </tr>
                             }
                         </tbody>
@@ -162,31 +220,115 @@
             </div>
         </div>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="col-xl-4 col-lg-5">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Acciones Rápidas</h6>
-            </div>
-            <div class="card-body">
-                <a href="#" class="btn btn-primary btn-block mb-3">
-                    <i class="fas fa-plus fa-sm text-white-50"></i> Nueva Venta
-                </a>
-                <a asp-controller="Inventario" asp-action="Index" class="btn btn-success btn-block mb-3">
-                    <i class="fas fa-boxes fa-sm text-white-50"></i> Ver Inventario
-                </a>
-                <a href="#" class="btn btn-info btn-block mb-3">
-                    <i class="fas fa-chart-line fa-sm text-white-50"></i> Reportes
-                </a>
-                @if (ViewBag.Rol == "Admin")
-                {
-                    <hr>
-                    <a href="#" class="btn btn-warning btn-block">
-                        <i class="fas fa-users-cog fa-sm text-white-50"></i> Gestionar Usuarios
-                    </a>
-                }
-            </div>
-        </div>
-    </div>
 </div>
+
+@section Scripts {
+    <!-- Page level plugins -->
+    <script src="~/vendor/chart.js/Chart.min.js"></script>
+
+    <script>
+        // Set new default font family and font color to mimic Bootstrap's default styling
+        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+        Chart.defaults.global.defaultFontColor = '#858796';
+
+        var ctx = document.getElementById("myAreaChart");
+        var myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Json.Serialize(Model.ChartLabels),
+                datasets: [
+                    {
+                        label: "Entradas",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(28, 200, 138, 0.05)", // Green background
+                        borderColor: "rgba(28, 200, 138, 1)", // Green line
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgba(28, 200, 138, 1)",
+                        pointBorderColor: "rgba(28, 200, 138, 1)",
+                        pointHoverRadius: 3,
+                        pointHoverBackgroundColor: "rgba(28, 200, 138, 1)",
+                        pointHoverBorderColor: "rgba(28, 200, 138, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: @Json.Serialize(Model.ChartDataEntradas),
+                    },
+                    {
+                        label: "Salidas",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(231, 74, 59, 0.05)", // Red background
+                        borderColor: "rgba(231, 74, 59, 1)", // Red line
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgba(231, 74, 59, 1)",
+                        pointBorderColor: "rgba(231, 74, 59, 1)",
+                        pointHoverRadius: 3,
+                        pointHoverBackgroundColor: "rgba(231, 74, 59, 1)",
+                        pointHoverBorderColor: "rgba(231, 74, 59, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: @Json.Serialize(Model.ChartDataSalidas),
+                    }
+                ],
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 25,
+                        top: 25,
+                        bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        time: {
+                            unit: 'date'
+                        },
+                        gridLines: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 7
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            maxTicksLimit: 5,
+                            padding: 10,
+                            // Include a dollar sign in the ticks
+                            callback: function(value, index, values) {
+                                return value;
+                            }
+                        },
+                        gridLines: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }],
+                },
+                legend: {
+                    display: true
+                },
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    titleMarginBottom: 10,
+                    titleFontColor: '#6e707e',
+                    titleFontSize: 14,
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    intersect: false,
+                    mode: 'index',
+                    caretPadding: 10,
+                }
+            }
+        });
+    </script>
+}

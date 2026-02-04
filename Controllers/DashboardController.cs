@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sistema_Almacen.Data;
+using Sistema_Almacen.Models;
 using Sistema_Almacen.Models.ViewModels;
+using System.Globalization;
 
 namespace Sistema_Almacen.Controllers
 {
@@ -24,14 +26,17 @@ namespace Sistema_Almacen.Controllers
         {
             var hoy = DateTime.Today;
 
-            // Consultas simples que SQLite sí soporta (Count)
+            // 1. KPIs Generales
             var totalProductos = await _context.Productos.CountAsync();
+            
+            // Stock Bajo (< 10 unidades)
             var productosStockBajo = await _context.LotesInventario
                     .GroupBy(l => l.ProductoId)
-                    .Select(g => g.Sum(l => l.StockActual))
-                    .CountAsync(stock => stock < 10);
+                    .Select(g => new { ProductoId = g.Key, TotalStock = g.Sum(l => l.StockActual) })
+                    .Where(x => x.TotalStock < 10)
+                    .CountAsync();
 
-            // SQLite tiene problemas con SumAsync en decimales, lo calculamos en memoria (ToList)
+            // Valor Inventario (Cálculo en memoria por limitaciones de SQLite con Sum decimal)
             var lotesData = await _context.LotesInventario
                 .Select(l => new { l.StockActual, l.CostoUnitario })
                 .ToListAsync();
@@ -44,9 +49,36 @@ namespace Sistema_Almacen.Controllers
             var ventasHoyCount = ventasHoyData.Count;
             var ingresosHoy = ventasHoyData.Sum();
 
-            var productosRecientes = await _context.Productos
-                    .OrderByDescending(p => p.Id)
-                    .Take(5)
+            // 2. NUEVO KPI: Préstamos Vencidos (> 3 días o cualquier atraso según regla de negocio)
+            // El usuario pidió ">3 Días" en el texto de la tarjeta, así que filtramos por fecha límite
+            var totalPrestamosVencidos = await _context.Prestamos
+                .CountAsync(p => p.Estatus == EstatusPrestamo.Activo && p.FechaEsperadaRegreso < DateTime.Now);
+
+            // 3. DATOS PARA GRÁFICA (Últimos 7 días)
+            var fechaInicioGrafica = hoy.AddDays(-6);
+            var movimientosUltimosDias = await _context.MovimientosAlmacen
+                .Where(m => m.Fecha.Date >= fechaInicioGrafica)
+                .ToListAsync();
+
+            var chartLabels = new string[7];
+            var chartDataEntradas = new int[7];
+            var chartDataSalidas = new int[7];
+
+            for (int i = 0; i < 7; i++)
+            {
+                var dia = fechaInicioGrafica.AddDays(i);
+                chartLabels[i] = dia.ToString("dd/MM"); // Ej: 04/02
+                
+                var movsDia = movimientosUltimosDias.Where(m => m.Fecha.Date == dia).ToList();
+                chartDataEntradas[i] = movsDia.Where(m => m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.Ajuste).Sum(m => m.Cantidad);
+                chartDataSalidas[i] = movsDia.Where(m => m.Tipo == TipoMovimiento.Salida).Sum(m => m.Cantidad);
+            }
+
+            // 4. ÚLTIMOS MOVIMIENTOS (Tabla inferior)
+            var ultimosMovimientos = await _context.MovimientosAlmacen
+                    .Include(m => m.Usuario)
+                    .OrderByDescending(m => m.Fecha)
+                    .Take(10) // Traemos 10 para que se vea llena la tabla
                     .ToListAsync();
 
             var model = new DashboardViewModel
@@ -56,16 +88,18 @@ namespace Sistema_Almacen.Controllers
                 ValorInventario = valorInventario,
                 VentasHoy = ventasHoyCount,
                 IngresosHoy = ingresosHoy,
-                ProductosRecientes = productosRecientes
+                TotalPrestamosVencidos = totalPrestamosVencidos,
+                UltimosMovimientos = ultimosMovimientos,
+                ChartLabels = chartLabels,
+                ChartDataEntradas = chartDataEntradas,
+                ChartDataSalidas = chartDataSalidas
             };
 
-            // Pasar información adicional del usuario mediante ViewBag
-            // MODIFICADO: Sistema sin login, valores fijos
-            ViewBag.NombreUsuario = "Ing. Sosa"; // User.Identity?.Name;
-            ViewBag.Rol = "Admin"; // User.Claims.FirstOrDefault...
+            // Pasar información adicional del usuario
+            ViewBag.NombreUsuario = "Ing. Alexander Sosa"; 
+            ViewBag.Rol = "Admin"; 
             
             return View(model);
         }
     }
 }
-
