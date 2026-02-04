@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class ProductosController : Controller
     {
         private readonly ApplicationDbContext _context;

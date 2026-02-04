@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class EntradasController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -58,8 +58,8 @@ namespace Sistema_Almacen.Controllers
 
                 _context.LotesInventario.Add(lote);
 
-                // 2. Registrar el Movimiento de Almacén (Auditoría)
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                // MODIFICADO: Sistema sin login, usar ID de Admin (1) por defecto
+                var userId = "1"; // User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var movimiento = new MovimientoAlmacen
                 {
                     Fecha = DateTime.Now,

@@ -7,7 +7,7 @@ using BCrypt.Net;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize(Roles = "Admin")]
+
     public class UsuariosController : Controller
     {
         private readonly ApplicationDbContext _context;

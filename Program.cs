@@ -10,6 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(option =>
+    {
+        option.LoginPath = "/Acceso/Login";
+        option.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+    });
+
 // Configurar DbContext con SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -18,25 +25,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IVentaService, VentaService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 
-// ===== CONFIGURAR AUTENTICACIÓN CON COOKIES =====
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        // Ruta a la que se redirige si el usuario no está autenticado
-        options.LoginPath = "/Acceso/Login";
-        
-        // Ruta a la que se redirige si el usuario no tiene permisos
-        options.AccessDeniedPath = "/Acceso/Login";
-        
-        // Nombre de la cookie
-        options.Cookie.Name = "SistemaAlmacenCookie";
-        
-        // Tiempo de expiración de la cookie (8 horas)
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        
-        // La cookie expira si el usuario está inactivo
-        options.SlidingExpiration = true;
-    });
+
 
 var app = builder.Build();
 
@@ -51,8 +40,8 @@ using (var scope = app.Services.CreateScope())
         // ⚠️ SOLO PARA DESARROLLO: Descomentar la siguiente línea para resetear la BD
         // context.Database.EnsureDeleted();
         
-        // Aplicar migraciones pendientes (Esto creará la BD si no existe y evitará errores de esquema)
-        context.Database.Migrate(); 
+        // Usar EnsureCreated para recrear la BD basada en el modelo actual (sin migraciones)
+        context.Database.EnsureCreated(); 
 
         // 1. Seed Categorías (REQUERIDO por Producto)
         if (!context.Categorias.Any())
@@ -120,14 +109,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
 // ===== IMPORTANTE: Agregar estos middlewares en este orden =====
-app.UseAuthentication();  // Primero autenticación
-app.UseAuthorization();   // Luego autorización
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Ruta por defecto apunta a la página de Login
 app.MapControllerRoute(

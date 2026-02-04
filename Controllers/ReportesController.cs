@@ -6,7 +6,7 @@ using Sistema_Almacen.Models;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class ReportesController : Controller
     {
         private readonly ApplicationDbContext _context;

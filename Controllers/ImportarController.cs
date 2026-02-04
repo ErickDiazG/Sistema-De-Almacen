@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class ImportarController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -119,9 +119,14 @@ namespace Sistema_Almacen.Controllers
                 return View("Index");
             }
 
-            // Obtener ID del usuario actual
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            int usuarioId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 1;
+            // MODIFICADO: Sistema sin login, usar ID de Admin (1) por defecto
+            var userIdClaim = "1"; // User.FindFirst(ClaimTypes.NameIdentifier);
+            int usuarioId = 1; // Default
+            
+            if (userIdClaim != null)
+            {
+               usuarioId = int.Parse(userIdClaim);
+            }
 
             // Obtener sucursal por defecto (la primera disponible)
             var sucursalPorDefecto = await _context.Sucursales.FirstOrDefaultAsync();

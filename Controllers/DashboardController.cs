@@ -10,7 +10,7 @@ namespace Sistema_Almacen.Controllers
     /// Controlador del Dashboard principal
     /// Solo accesible para usuarios autenticados
     /// </summary>
-    [Authorize]
+
     public class DashboardController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -60,8 +60,9 @@ namespace Sistema_Almacen.Controllers
             };
 
             // Pasar información adicional del usuario mediante ViewBag
-            ViewBag.NombreUsuario = User.Identity?.Name;
-            ViewBag.Rol = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+            // MODIFICADO: Sistema sin login, valores fijos
+            ViewBag.NombreUsuario = "Ing. Sosa"; // User.Identity?.Name;
+            ViewBag.Rol = "Admin"; // User.Claims.FirstOrDefault...
             
             return View(model);
         }

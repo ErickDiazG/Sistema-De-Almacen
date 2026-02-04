@@ -203,24 +203,17 @@
             </div>
         }
 
-        <form asp-controller="Acceso" asp-action="Login" method="post">
+        <form asp-controller="Acceso" asp-action="Ingresar" method="post">
             <div class="form-group">
-                <input type="text" 
-                       name="nombreUsuario" 
-                       class="form-control-glass" 
-                       placeholder="Usuario" 
-                       required>
+                <button type="submit" name="rol" value="Admin" class="btn-entrar">
+                    <i class="fas fa-user-shield me-2"></i> ADMINISTRADOR
+                </button>
             </div>
             <div class="form-group">
-                <input type="password" 
-                       name="password" 
-                       class="form-control-glass" 
-                       placeholder="Contraseña" 
-                       required>
+                <button type="submit" name="rol" value="Empleado" class="btn-entrar" style="background: #475569; border-color: #475569;">
+                    <i class="fas fa-user-tag me-2"></i> EMPLEADO
+                </button>
             </div>
-            <button type="submit" class="btn-entrar">
-                ENTRAR
-            </button>
         </form>
 
         <img src="~/img/undraw_rocket.svg" alt="Decoration" class="deco-image">
@@ -228,10 +221,6 @@
         <p class="footer-text">
             Potenciando tu logística con tecnología avanzada.
         </p>
-
-        <div class="demo-creds">
-            Demo: 01231420 / jazzmin | 01230708 / cinthia
-        </div>
     </div>
 
     <script src="~/vendor/jquery/jquery.min.js"></script>

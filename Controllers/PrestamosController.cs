@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class PrestamosController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -121,10 +121,11 @@ namespace Sistema_Almacen.Controllers
                 prestamo.Estatus = EstatusPrestamo.Activo;
 
                 // Obtener ID del usuario actual
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                // MODIFICADO: Sistema sin login, usar ID de Admin (1) por defecto
+                var userIdClaim = "1"; 
                 if (userIdClaim != null)
                 {
-                    prestamo.UsuarioRegistroId = int.Parse(userIdClaim.Value);
+                    prestamo.UsuarioRegistroId = int.Parse(userIdClaim);
                 }
 
                 // Descontar stock temporalmente usando FIFO (Servicio)
@@ -218,8 +219,9 @@ namespace Sistema_Almacen.Controllers
                 }
 
                 // Registrar movimiento de entrada
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                int usuarioId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 1;
+                // MODIFICADO: Sistema sin login, usar ID de Admin (1) por defecto
+                var userIdClaim = "1"; 
+                int usuarioId = userIdClaim != null ? int.Parse(userIdClaim) : 1;
 
                 var movimiento = new MovimientoAlmacen
                 {

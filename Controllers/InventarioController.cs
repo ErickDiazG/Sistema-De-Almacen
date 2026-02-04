@@ -6,7 +6,7 @@ using Sistema_Almacen.Models.ViewModels;
 
 namespace Sistema_Almacen.Controllers
 {
-    [Authorize]
+
     public class InventarioController : Controller
     {
         private readonly ApplicationDbContext _context;
