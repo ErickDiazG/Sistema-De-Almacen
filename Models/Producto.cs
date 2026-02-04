@@ -35,7 +35,23 @@ namespace Sistema_Almacen.Models
         /// Indica si el producto es un activo fijo (herramienta, laptop, etc.) que puede ser prestado
         /// </summary>
         [Display(Name = "Es Activo Fijo")]
+        /// <summary>
+        /// Indica si el producto es un activo fijo (herramienta, laptop, etc.) que puede ser prestado
+        /// </summary>
+        [Display(Name = "Es Activo Fijo")]
         public bool EsActivoFijo { get; set; } = false;
+
+        /// <summary>
+        /// Propiedad solicitada "Es Prestable" (Alias para UI o lógica específica)
+        /// </summary>
+        [Display(Name = "Es Prestable")]
+        public bool EsPrestable { get; set; } = false;
+
+        [Display(Name = "Ubicación por Defecto")]
+        public int? UbicacionDefectoId { get; set; }
+
+        [ForeignKey("UbicacionDefectoId")]
+        public virtual Ubicacion? UbicacionDefecto { get; set; }
 
         [Required(ErrorMessage = "La categoría es obligatoria")]
         public int CategoriaId { get; set; }
@@ -45,6 +61,7 @@ namespace Sistema_Almacen.Models
         public virtual Categoria Categoria { get; set; } = null!;
 
         public virtual ICollection<LoteInventario> Lotes { get; set; } = new List<LoteInventario>();
+        public virtual ICollection<Producto> ProductosConDefecto { get; set; } = new List<Producto>();
 
         public virtual ICollection<Prestamo> Prestamos { get; set; } = new List<Prestamo>();
     }

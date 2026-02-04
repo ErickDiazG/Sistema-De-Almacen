@@ -1,0 +1,142 @@
+@model List<Sistema_Almacen.Models.ViewModels.ImportPreviewViewModel>
+
+@{
+    ViewData["Title"] = "Previsualización de Importación";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Paso 2: Confirmar Datos</h6>
+        <div class="dropdown no-arrow">
+            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Cancelar / Volver
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        
+        <div class="alert alert-info border-left-info" role="alert">
+            <h4 class="alert-heading">Resumen de Análisis</h4>
+            <p>
+                Total Filas: <strong>@Model.Count</strong> | 
+                <span class="text-success">Válidas: <strong>@Model.Count(x => x.IsValid)</strong></span> | 
+                <span class="text-danger">Con Errores: <strong>@Model.Count(x => !x.IsValid)</strong></span>
+            </p>
+            <p class="mb-0">Revise los datos a continuación. Las filas rojas no se importarán. Los productos existentes (naranja) solo sumarán stock.</p>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="previewTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>SKU</th>
+                        <th>Nombre</th>
+                        <th>Costo</th>
+                        <th>Cant.</th>
+                        <th>Ubicación</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        string rowClass = "";
+                        string badge = "";
+                        
+                        if (!item.IsValid) 
+                        {
+                            rowClass = "table-danger"; 
+                            badge = "<span class='badge badge-danger'>Error</span>";
+                        }
+                        else if (item.ExistsInDb) 
+                        {
+                            rowClass = "table-warning";
+                            badge = "<span class='badge badge-warning'>Actualizar</span>";
+                        }
+                        else 
+                        {
+                            rowClass = "table-success"; // Soft green
+                            badge = "<span class='badge badge-success'>Nuevo</span>";
+                        }
+
+                        <tr class="@rowClass">
+                            <td>@Html.Raw(badge)</td>
+                            <td>@item.SKU</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Costo.ToString("C")</td>
+                            <td>@item.Cantidad</td>
+                            <td>@item.UbicacionCodigo</td>
+                            <td class="small">@item.ErrorMessage</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-4 text-right">
+             <button id="btnConfirmar" class="btn btn-success btn-lg shadow-sm" @(Model.Any(x => x.IsValid) ? "" : "disabled")>
+                <i class="fas fa-save fa-sm text-white-50 mr-2"></i> Guardar en Base de Datos
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('btnConfirmar').addEventListener('click', function() {
+            var allData = @Json.Serialize(Model);
+            var validData = allData.filter(function(item) { return item.isValid; });
+            
+            if(validData.length === 0) {
+                Swal.fire('Error', 'No hay registros válidos para importar', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Se importarán " + validData.length + " registros válidos.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1cc88a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, importar ahora'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    
+                    Swal.fire({
+                        title: 'Procesando...',
+                        html: 'Por favor espere mientras se guardan los datos.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch('@Url.Action("Confirmar", "Importar")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        body: JSON.stringify(validData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            Swal.fire('¡Éxito!', data.message, 'success')
+                                .then(() => { window.location.href = '@Url.Action("Index", "Productos")'; });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Ocurrió un error inesperado de red.', 'error');
+                    });
+                }
+            })
+        });
+    </script>
+}

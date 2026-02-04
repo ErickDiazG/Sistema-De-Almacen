@@ -1,7 +1,7 @@
 @model IEnumerable<Sistema_Almacen.Models.Producto>
 
 @{
-    ViewData["Title"] = "Productos";
+    ViewData["Title"] = "Catálogo de Productos";
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -16,10 +16,15 @@
 
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">Catálogo de Productos</h6>
-        <a asp-action="Create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Nuevo Producto
-        </a>
+        <h6 class="m-0 font-weight-bold text-primary">Catálogo de Productos (Intelligent WMS)</h6>
+        <div>
+            <a asp-controller="Importar" asp-action="Index" class="btn btn-success btn-sm mr-2 shadow-sm">
+                <i class="fas fa-file-excel"></i> Importar Wizard
+            </a>
+            <a asp-action="Create" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-plus"></i> Nuevo Producto
+            </a>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -28,11 +33,11 @@
                     <tr>
                         <th class="text-center" style="width: 60px;">Foto</th>
                         <th>Nombre / Descripción</th>
-                        <th>SKU</th>
-                        <th>Categoría</th>
+                        <th>SKU / Detalles</th>
+                        <th>Propiedades</th>
                         <th>Precio Venta</th>
                         <th class="text-center">Stock Mín.</th>
-                        <th class="text-center">Acciones</th>
+                        <th class="text-center" style="width: 150px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,18 +54,43 @@
                                     <img src="~/img/no-image.png" alt="No image" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" />
                                 }
                             </td>
-                            <td class="align-middle font-weight-bold">@item.Nombre</td>
-                            <td class="align-middle"><span class="badge badge-secondary">@item.SKU</span></td>
-                            <td class="align-middle">@item.Categoria?.Nombre</td>
+                            <td class="align-middle font-weight-bold">
+                                @item.Nombre
+                                <div class="small text-muted">@item.Categoria?.Nombre</div>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge badge-secondary" style="font-size: 0.9em;">@item.SKU</span>
+                            </td>
+                            <td class="align-middle">
+                                @if(item.EsActivoFijo || item.EsPrestable)
+                                {
+                                    <span class="badge badge-info" title="Este artículo se presta, no se consume"><i class="fas fa-tools"></i> Activo/Prestable</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-light border"><i class="fas fa-box"></i> Consumible</span>
+                                }
+                                
+                                @if(item.UbicacionDefecto != null)
+                                {
+                                     <div class="small mt-1 text-primary">
+                                         <i class="fas fa-map-marker-alt"></i> @item.UbicacionDefecto.PickingPath
+                                     </div>
+                                }
+                            </td>
                             <td class="align-middle">@item.PrecioVenta.ToString("C")</td>
                             <td class="text-center align-middle">
                                 <span class="badge badge-pill badge-warning">@item.StockMinimo</span>
                             </td>
                             <td class="text-center align-middle">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm" title="Editar">
+                                <button type="button" class="btn btn-dark btn-circle btn-sm shadow-sm mr-1" 
+                                        onclick="showQRCode('@item.SKU', '@item.Nombre')" title="Generar Etiqueta QR">
+                                    <i class="fas fa-qrcode"></i>
+                                </button>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm shadow-sm mr-1" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-danger btn-circle btn-sm" onclick="eliminarProducto(@item.Id, '@item.Nombre')" title="Eliminar">
+                                <button type="button" class="btn btn-danger btn-circle btn-sm shadow-sm" onclick="eliminarProducto(@item.Id, '@item.Nombre')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
@@ -72,9 +102,80 @@
     </div>
 </div>
 
+<!-- Modal QR -->
+<div class="modal fade" id="qrModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title font-weight-bold text-gray-800" id="qrModalTitle">Etiqueta de Producto</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <div id="printArea" class="p-3 border rounded bg-white d-inline-block">
+            <h4 class="font-weight-bold text-dark mb-1" id="qrSKU">SKU</h4>
+            <div id="qrcode" class="my-3 d-flex justify-content-center"></div>
+            <p class="mb-0 text-muted small" id="qrName">Nombre del Producto</p>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 justify-content-center">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="printLabel()">
+            <i class="fas fa-print mr-2"></i> Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- QR Code Lib -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <script>
+        // QR Logic
+        function showQRCode(sku, name) {
+            $('#qrSKU').text(sku);
+            $('#qrName').text(name);
+            $('#qrcode').empty(); // Limpiar anterior
+            
+            new QRCode(document.getElementById("qrcode"), {
+                text: sku,
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            $('#qrModal').modal('show');
+        }
+
+        function printLabel() {
+            var printContent = document.getElementById('printArea').innerHTML;
+            
+            // Crear ifr oculto
+             var printWindow = window.open('', '', 'height=400,width=400');
+            printWindow.document.write('<html><head><title>Imprimir Etiqueta</title>');
+            printWindow.document.write('<link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap\" rel=\"stylesheet\">');
+            printWindow.document.write('<style>body { font-family: Roboto, sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; } .label-container { text-align: center; border: 2px solid #000; padding: 20px; width: 300px; } h4 { margin: 0 0 10px 0; font-size: 24px; } img { margin: 10px 0; } p { margin: 0; font-size: 14px; }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<div class=\"label-container\">');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</div>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            // Esperar a que cargue (especialmente la imagen QR si fuera img, pero canvas es inmediato)
+            // QRCode.js usa canvas o img.
+            setTimeout(function() {
+                printWindow.print();
+            }, 500);
+        }
+
+        // Delete Logic
         function eliminarProducto(id, nombre) {
             Swal.fire({
                 title: '¿Eliminar producto?',
