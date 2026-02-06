@@ -1,303 +1,154 @@
-@model IEnumerable<Sistema_Almacen.Models.Prestamo>
-@using Sistema_Almacen.Models
+@model Sistema_Almacen.Models.ViewModels.LoanMonitorViewModel
 
 @{
-    ViewData["Title"] = "Control de Préstamos";
-    var filtroActual = ViewBag.FiltroActual as string ?? "activos";
+    ViewData["Title"] = "Monitor de Préstamos";
 }
 
-<!-- Page Heading con Estadísticas -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">
-        <i class="fas fa-hand-holding text-primary"></i> Control de Préstamos y Activos
-    </h1>
-    <a asp-action="Create" class="btn btn-primary shadow-sm">
-        <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Préstamo
-    </a>
+    <h1 class="h3 mb-0 text-gray-800">Monitor de Préstamos (Traffic Light)</h1>
 </div>
 
-<!-- Tarjetas de Estadísticas -->
-<div class="row mb-4">
-    <!-- Préstamos Activos -->
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Préstamos Activos</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalActivos</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-clock fa-2x text-gray-300"></i>
-                    </div>
+<!-- TABS NAVIGATION -->
+<ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="pills-active-tab" data-toggle="pill" href="#pills-active" role="tab" aria-selected="true">
+            <i class="fas fa-circle text-success mr-2"></i> Activos (@Model.ActiveLoans.Count)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.TotalOverdue > 0 ? "bg-danger text-white font-weight-bold" : "")" id="pills-overdue-tab" data-toggle="pill" href="#pills-overdue" role="tab" aria-selected="false">
+            <i class="fas fa-exclamation-triangle mr-2"></i> MOROSOS / ATRASADOS (@Model.TotalOverdue)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="pills-history-tab" data-toggle="pill" href="#pills-history" role="tab" aria-selected="false">
+            <i class="fas fa-history mr-2"></i> Historial Cerrado
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="pills-tabContent">
+    
+    <!-- ACTIVE LOANS TAB -->
+    <div class="tab-pane fade show active" id="pills-active" role="tabpanel">
+        <div class="row">
+            @foreach (var loan in Model.ActiveLoans)
+            {
+                <div class="col-md-4 mb-4">
+                     @await Html.PartialAsync("_LoanCard", loan)
                 </div>
+            }
+            @if(!Model.ActiveLoans.Any()) { <div class="col-12"><div class="alert alert-info">No hay préstamos activos normales.</div></div> }
+        </div>
+    </div>
+
+    <!-- OVERDUE LOANS TAB (RED) -->
+    <div class="tab-pane fade" id="pills-overdue" role="tabpanel">
+        <div class="row">
+            @foreach (var loan in Model.OverdueLoans)
+            {
+                <div class="col-md-4 mb-4">
+                     @await Html.PartialAsync("_LoanCard", loan)
+                </div>
+            }
+             @if(!Model.OverdueLoans.Any()) { <div class="col-12"><div class="alert alert-success">¡Excelente! No hay préstamos atrasados.</div></div> }
+        </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="tab-pane fade" id="pills-history" role="tabpanel">
+        <div class="row">
+            @foreach (var loan in Model.HistoryLoans)
+            {
+                <div class="col-md-4 mb-4">
+                     @await Html.PartialAsync("_LoanCard", loan)
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- RETURN WIZARD MODAL -->
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-undo-alt mr-2"></i> Asistente de Devolución</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalLoanId" />
+                <h5 class="font-weight-bold" id="modalProductName">Producto</h5>
+                <p class="text-muted small">Solicitante: <span id="modalUser"></span></p>
+                
+                <hr>
+
+                <div class="form-group">
+                    <label>Cantidad a Devolver (Pendiente: <span id="modalPending" class="font-weight-bold"></span>)</label>
+                    <input type="number" class="form-control form-control-lg" id="modalQty" min="1" />
+                </div>
+
+                <div class="form-group">
+                    <label>Condición del Activo</label>
+                    <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                        <label class="btn btn-outline-success active">
+                            <input type="radio" name="modalCondicion" value="BUENO" checked> <i class="fas fa-check"></i> Buen Estado
+                        </label>
+                         <label class="btn btn-outline-danger">
+                            <input type="radio" name="modalCondicion" value="DAÑADO"> <i class="fas fa-heart-broken"></i> Dañado/Perdido
+                        </label>
+                    </div>
+                    <small class="text-muted">Si selecciona "Dañado", el item NO volverá al stock y se generará un reporte de pérdida.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea class="form-control" id="modalObs" rows="2"></textarea>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="submitReturn()">Confirmar Devolución</button>
             </div>
         </div>
-    </div>
-
-    <!-- Préstamos Atrasados -->
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2 @(ViewBag.TotalAtrasados > 0 ? "bg-gradient-danger text-white" : "")">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold @(ViewBag.TotalAtrasados > 0 ? "text-white" : "text-danger") text-uppercase mb-1">
-                            <i class="fas fa-exclamation-triangle"></i> MOROSOS / Atrasados
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold @(ViewBag.TotalAtrasados > 0 ? "text-white" : "text-gray-800")">
-                            @ViewBag.TotalAtrasados
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-times fa-2x @(ViewBag.TotalAtrasados > 0 ? "text-white-50" : "text-gray-300")"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Devueltos -->
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Devueltos</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalDevueltos</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Alerta de Éxito -->
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i> @TempData["Success"]
-        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-    </div>
-}
-
-<!-- Filtros -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <div class="btn-group" role="group">
-            <a asp-action="Index" asp-route-filtro="activos" 
-               class="btn @(filtroActual == "activos" ? "btn-primary" : "btn-outline-primary")">
-                <i class="fas fa-clock"></i> Activos
-            </a>
-            <a asp-action="Index" asp-route-filtro="atrasados" 
-               class="btn @(filtroActual == "atrasados" ? "btn-danger" : "btn-outline-danger")">
-                <i class="fas fa-exclamation-triangle"></i> Atrasados
-            </a>
-            <a asp-action="Index" asp-route-filtro="devueltos" 
-               class="btn @(filtroActual == "devueltos" ? "btn-success" : "btn-outline-success")">
-                <i class="fas fa-check"></i> Devueltos
-            </a>
-            <a asp-action="Index" asp-route-filtro="todos" 
-               class="btn @(filtroActual == "todos" ? "btn-secondary" : "btn-outline-secondary")">
-                <i class="fas fa-list"></i> Todos
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Tabla de Préstamos -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">
-            <i class="fas fa-table"></i> Lista de Préstamos
-        </h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                <thead class="thead-dark">
-                    <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 20%;">Activo/Producto</th>
-                        <th style="width: 15%;">Solicitante</th>
-                        <th class="text-center" style="width: 8%;">Cant.</th>
-                        <th style="width: 12%;">Fecha Salida</th>
-                        <th style="width: 12%;">Fecha Límite</th>
-                        <th class="text-center" style="width: 15%;">Estado</th>
-                        <th class="text-center" style="width: 13%;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                No hay préstamos para mostrar.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model)
-                        {
-                            // Determinar clase de la fila según estado
-                            string rowClass = "";
-                            if (item.Estatus == EstatusPrestamo.Activo && item.EstaAtrasado)
-                            {
-                                rowClass = "table-danger"; // Rojo para atrasados
-                            }
-                            else if (item.Estatus == EstatusPrestamo.Devuelto)
-                            {
-                                rowClass = "table-light text-muted";
-                            }
-
-                            <tr class="@rowClass">
-                                <td class="align-middle">@item.Id</td>
-                                <td class="align-middle">
-                                    <strong>@item.Producto?.Nombre</strong><br>
-                                    <small class="text-muted">@item.Producto?.SKU</small>
-                                </td>
-                                <td class="align-middle">
-                                    <i class="fas fa-user"></i> @item.UsuarioSolicitante
-                                    @if (!string.IsNullOrEmpty(item.Departamento))
-                                    {
-                                        <br><small class="text-muted">@item.Departamento</small>
-                                    }
-                                </td>
-                                <td class="text-center align-middle">
-                                    <span class="badge badge-pill badge-info">@item.Cantidad</span>
-                                </td>
-                                <td class="align-middle">
-                                    @item.FechaSalida.ToString("dd/MM/yyyy")<br>
-                                    <small class="text-muted">@item.FechaSalida.ToString("HH:mm")</small>
-                                </td>
-                                <td class="align-middle">
-                                    @item.FechaEsperadaRegreso.ToString("dd/MM/yyyy")
-                                </td>
-                                <td class="text-center align-middle">
-                                    @if (item.Estatus == EstatusPrestamo.Devuelto)
-                                    {
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-check"></i> Devuelto
-                                        </span>
-                                        <br>
-                                        <small class="text-muted">@item.FechaDevolucionReal?.ToString("dd/MM/yyyy")</small>
-                                    }
-                                    else if (item.EstaAtrasado)
-                                    {
-                                        <span class="badge badge-danger" style="font-size: 0.9em; padding: 8px 12px;">
-                                            <i class="fas fa-exclamation-triangle"></i> ¡ATRASADO @item.DiasAtraso DÍA(S)!
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-clock"></i> A Tiempo
-                                        </span>
-                                        @if (item.DiasRestantes <= 2 && item.DiasRestantes >= 0)
-                                        {
-                                            <br>
-                                            <small class="text-warning font-weight-bold">
-                                                <i class="fas fa-hourglass-half"></i> Quedan @item.DiasRestantes día(s)
-                                            </small>
-                                        }
-                                    }
-                                </td>
-                                <td class="text-center align-middle">
-                                    @if (item.Estatus == EstatusPrestamo.Activo)
-                                    {
-                                        <button type="button" class="btn btn-success btn-sm" 
-                                                onclick="confirmarDevolucion(@item.Id, '@item.Producto?.Nombre', '@item.UsuarioSolicitante')"
-                                                title="Registrar Devolución">
-                                            <i class="fas fa-undo"></i> Devolver
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Leyenda -->
-<div class="card shadow mb-4">
-    <div class="card-body py-2">
-        <small>
-            <strong>Leyenda:</strong>
-            <span class="badge badge-danger ml-2">ATRASADO</span> = Pasó la fecha límite
-            <span class="badge badge-success ml-3">A Tiempo</span> = Dentro del plazo
-            <span class="badge badge-secondary ml-3">Devuelto</span> = Ya fue regresado
-        </small>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function confirmarDevolucion(prestamoId, productoNombre, solicitante) {
-            Swal.fire({
-                title: 'Registrar Devolución',
-                html: `
-                    <p>¿Confirmar devolución de <strong>${productoNombre}</strong>?</p>
-                    <p class="text-muted">Solicitante: ${solicitante}</p>
-                    <div class="form-group text-left">
-                        <label>Comentario de devolución (opcional):</label>
-                        <input type="text" id="comentarioDevolucion" class="form-control" 
-                               placeholder="Ej: En buen estado, sin daños">
-                    </div>
-                `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="fas fa-check"></i> Confirmar Devolución',
-                cancelButtonText: 'Cancelar',
-                preConfirm: () => {
-                    return document.getElementById('comentarioDevolucion').value;
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    procesarDevolucion(prestamoId, result.value);
-                }
-            });
+        function openReturnWizard(id, product, user, pending) {
+            $('#modalLoanId').val(id);
+            $('#modalProductName').text(product);
+            $('#modalUser').text(user);
+            $('#modalPending').text(pending);
+            $('#modalQty').val(pending); // Default to full return
+            $('#modalObs').val('');
+            $('#returnModal').modal('show');
         }
 
-        function procesarDevolucion(prestamoId, comentario) {
-            Swal.fire({
-                title: 'Procesando...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+        function submitReturn() {
+            var id = $('#modalLoanId').val();
+            var qty = $('#modalQty').val();
+            var cond = $('input[name="modalCondicion"]:checked').val();
+            var obs = $('#modalObs').val();
 
-            $.ajax({
-                url: '@Url.Action("Devolver", "Prestamos")',
-                type: 'POST',
-                data: { id: prestamoId, comentarioDevolucion: comentario },
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: response.estabaAtrasado ? 'warning' : 'success',
-                            title: response.estabaAtrasado ? 'Devolución con Atraso' : '¡Devolución Exitosa!',
-                            text: response.message
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
-                    }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
+            if(qty < 1) { Swal.fire('Error', 'Cantidad inválida', 'error'); return; }
+
+            $.post('@Url.Action("RegistrarDevolucion", "Prestamos")', {
+                loanId: id,
+                cantidadDevolver: qty,
+                condicion: cond,
+                observaciones: obs
+            }, function(res) {
+                if(res.success) {
+                    $('#returnModal').modal('hide');
+                    Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', res.message, 'error');
                 }
             });
         }

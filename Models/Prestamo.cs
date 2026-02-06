@@ -75,6 +75,11 @@ namespace Sistema_Almacen.Models
         public int Cantidad { get; set; } = 1;
 
         /// <summary>
+        /// Cantidad que ya ha sido devuelta al almacén
+        /// </summary>
+        public int CantidadDevuelta { get; set; } = 0;
+
+        /// <summary>
         /// Notas o comentarios adicionales
         /// </summary>
         [StringLength(500)]

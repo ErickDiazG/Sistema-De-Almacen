@@ -35,10 +35,6 @@ namespace Sistema_Almacen.Models
         /// Indica si el producto es un activo fijo (herramienta, laptop, etc.) que puede ser prestado
         /// </summary>
         [Display(Name = "Es Activo Fijo")]
-        /// <summary>
-        /// Indica si el producto es un activo fijo (herramienta, laptop, etc.) que puede ser prestado
-        /// </summary>
-        [Display(Name = "Es Activo Fijo")]
         public bool EsActivoFijo { get; set; } = false;
 
         /// <summary>

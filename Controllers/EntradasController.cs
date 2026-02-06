@@ -66,7 +66,9 @@ namespace Sistema_Almacen.Controllers
                     UsuarioId = int.Parse(userId!),
                     Tipo = TipoMovimiento.Entrada,
                     Cantidad = dto.Cantidad,
-                    Referencia = $"Entrada de mercancía - Lote #{lote.Id}"
+                    Referencia = $"Entrada de mercancía - Lote #{lote.Id}",
+                    ProductoId = dto.ProductoId,
+                    CostoUnitario = dto.CostoUnitario
                 };
 
                 _context.MovimientosAlmacen.Add(movimiento);

@@ -1,0 +1,95 @@
+@model Sistema_Almacen.Models.Prestamo
+
+@{
+    var now = DateTime.Now;
+    var daysRestantes = (Model.FechaEsperadaRegreso - now).TotalDays;
+    
+    string borderClass = "border-left-success";
+    string bgClass = "";
+    string icon = "fa-clock";
+    string statusText = "ACTIVO";
+    string textClass = "text-success";
+
+    if (Model.Estatus == Sistema_Almacen.Models.EstatusPrestamo.Devuelto)
+    {
+        borderClass = "border-left-secondary";
+        bgClass = "bg-light";
+        icon = "fa-check-circle";
+        statusText = "CERRADO";
+        textClass = "text-gray-600";
+    }
+    else if (Model.EstaAtrasado)
+    {
+        borderClass = "border-left-danger";
+        bgClass = "bg-gradient-danger-soft"; // Custom or simple bg-danger-light
+        icon = "fa-exclamation-triangle";
+        statusText = $"ATRASADO ({Math.Abs((int)daysRestantes)} días)";
+        textClass = "text-danger";
+    }
+    else if (daysRestantes <= 1) // Warning (Yellow traffic light)
+    {
+        borderClass = "border-left-warning";
+        icon = "fa-exclamation-circle";
+        statusText = "VENCE PRONTO";
+        textClass = "text-warning";
+    }
+
+    int pendientes = Model.Cantidad - Model.CantidadDevuelta;
+}
+
+<div class="card shadow h-100 py-2 @borderClass @bgClass">
+    <div class="card-body">
+        <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+                <div class="text-xs font-weight-bold @textClass text-uppercase mb-1">
+                    @statusText <span class="float-right text-gray-500 small">#@Model.Id</span>
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    @Model.Producto?.Nombre
+                </div>
+                <div class="text-sm text-gray-600 mb-2">
+                    Solicitante: <strong>@Model.UsuarioSolicitante</strong>
+                </div>
+                
+                <div class="row text-xs mb-2">
+                    <div class="col-6">
+                        <i class="fas fa-calendar-alt"></i> Salida:<br>
+                        @Model.FechaSalida.ToString("dd/MMM HH:mm")
+                    </div>
+                    <div class="col-6">
+                         <i class="fas fa-flag-checkered"></i> Límite:<br>
+                        <strong class="@(Model.EstaAtrasado ? "text-danger" : "")">@Model.FechaEsperadaRegreso.ToString("dd/MMM")</strong>
+                    </div>
+                </div>
+
+                <!-- Progress Bar for Partial Returns -->
+                @if(Model.Estatus == Sistema_Almacen.Models.EstatusPrestamo.Activo)
+                {
+                    <div class="mb-2">
+                        <small>Progreso: @Model.CantidadDevuelta / @Model.Cantidad devol</small>
+                        <div class="progress progress-sm mb-2">
+                            @{
+                                var pct = (double)Model.CantidadDevuelta / Model.Cantidad * 100;
+                            }
+                            <div class="progress-bar bg-info" role="progressbar" style="width: @pct%" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-sm btn-block" onclick="openReturnWizard(@Model.Id, '@Model.Producto?.Nombre', '@Model.UsuarioSolicitante', @pendientes)">
+                        <i class="fas fa-undo"></i> Registrar Devolución
+                    </button>
+                }
+                else
+                {
+                     <div class="text-center mt-3 text-gray-500">
+                         <i class="fas fa-check"></i> Completado el @Model.FechaDevolucionReal?.ToString("dd/MMM")
+                     </div>
+                }
+
+            </div>
+            <div class="col-auto">
+                <i class="fas @icon fa-2x text-gray-300"></i>
+            </div>
+        </div>
+    </div>
+</div>

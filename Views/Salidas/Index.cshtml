@@ -1,0 +1,362 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Mostrador de Salidas / POS";
+}
+
+<style>
+    .cart-container { height: 65vh; overflow-y: auto; }
+    .product-row { transition: all 0.2s; }
+    .product-row:hover { background-color: #f8f9fc; }
+    .scanner-mode { border: 2px solid #4e73df !important; box-shadow: 0 0 10px rgba(78,115,223,0.2) !important; }
+</style>
+
+<div class="row h-100">
+    <!-- Left Column: Cart & Scanner -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4 h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-barcode mr-2"></i> Escáner / Búsqueda</h6>
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="soundSwitch" checked>
+                    <label class="custom-control-label small text-white" for="soundSwitch">Sonidos</label>
+                </div>
+            </div>
+            
+            <div class="card-body d-flex flex-column">
+                <!-- Search Input -->
+                <div class="input-group mb-4">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-gray-400"></i></span>
+                    </div>
+                    <input type="text" id="scannerInput" class="form-control form-control-lg bg-light border-0 small scanner-mode" 
+                           placeholder="Escanee código de barras o escriba SKU..." aria-label="Search" autofocus>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button" id="btnAddManual">
+                            <i class="fas fa-plus fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="cart-container table-responsive">
+                    <table class="table table-borderless" id="cartTable">
+                        <thead class="border-bottom">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center" width="150">Cantidad</th>
+                                <th class="text-right">Stock Disp.</th>
+                                <th width="50"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartBody">
+                            <!-- Items added via JS -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="emptyCartMessage" class="text-center mt-5 text-gray-500">
+                        <i class="fas fa-shopping-basket fa-4x mb-3 text-gray-300"></i>
+                        <p class="lead">El carrito está vacío</p>
+                        <p class="small">Escanee un producto para comenzar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Checkout Panel -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Detalles de Salida</h6>
+            </div>
+            <div class="card-body">
+                <form id="checkoutForm">
+                    <!-- Output Type -->
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-gray-600">Tipo de Operación</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-outline-secondary active align-middle" onclick="toggleLoanFields(false)">
+                                <input type="radio" name="tipoSalida" value="CONSUMO" checked> <i class="fas fa-boxes mr-1"></i> Consumo / Gasto
+                            </label>
+                            <label class="btn btn-outline-secondary align-middle" onclick="toggleLoanFields(true)">
+                                <input type="radio" name="tipoSalida" value="PRESTAMO"> <i class="fas fa-hand-holding mr-1"></i> Préstamo
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Responsible (Loan Only) -->
+                    <div class="form-group" id="loanFieldUser" style="display:none;">
+                        <label class="small font-weight-bold text-gray-600">Responsable / Solicitante <span class="text-danger">*</span></label>
+                        <select class="form-control" id="usuarioSolicitante">
+                            <option value="">Seleccione Empleado...</option>
+                             @foreach (var u in ViewBag.Usuarios)
+                            {
+                                <option value="@u.Id">@u.Nombre (@u.Rol)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-gray-600">Referencia / Proyecto</label>
+                        <input type="text" class="form-control" id="referencia" placeholder="Ej: Proyecto A, Mantenimiento...">
+                    </div>
+
+                    <hr>
+
+                    <!-- Summary -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="font-weight-bold">Total Items:</span>
+                        <span class="font-weight-bold" id="totalItems">0</span>
+                    </div>
+
+                    <button type="button" class="btn btn-success btn-block btn-lg mt-4 shadow-sm" onclick="processCheckout()">
+                        <i class="fas fa-check-circle mr-2"></i> CONFIRMAR SALIDA
+                    </button>
+                    <button type="button" class="btn btn-danger btn-block btn-sm mt-3" onclick="clearCart()">
+                        <i class="fas fa-trash mr-2"></i> Cancelar Todo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Store State
+        let cart = [];
+        let audioSuccess = new Audio('https://raw.githubusercontent.com/xi-lab/sounds/master/success.mp3'); // Sound effect placeholder
+        
+        // Init
+        $(document).ready(function() {
+            $('#scannerInput').focus();
+            
+            // Listen for Scanner "Enter"
+            $('#scannerInput').on('keypress', function (e) {
+                if(e.which === 13){
+                    e.preventDefault();
+                    var term = $(this).val();
+                    if(term.length > 0) {
+                        addItemToCart(term);
+                        $(this).val(''); // Clear input for next scan
+                    }
+                }
+            });
+
+            // Prevent form submit
+            $('#checkoutForm').on('submit', function(e) { e.preventDefault(); });
+        });
+
+        // Toggle Fields
+        function toggleLoanFields(isLoan) {
+            if(isLoan) {
+                $('#loanFieldUser').slideDown();
+            } else {
+                $('#loanFieldUser').slideUp();
+            }
+        }
+
+        // Add Item Logic
+        function addItemToCart(sku) {
+            // Check if already in cart
+            let existing = cart.find(x => x.sku === sku);
+            if(existing) {
+                existing.cantidad++;
+                renderCart();
+                playSound();
+                toast('Cantidad actualizada', 'info');
+                return;
+            }
+
+            // Fetch from Backend
+            $.get('@Url.Action("BuscarProducto", "Salidas")', { term: sku }, function(data) {
+                if(data) {
+                    if(data.stockTotal <= 0) {
+                         Swal.fire({
+                            icon: 'error',
+                            title: 'Sin Stock',
+                            text: 'El producto "' + data.nombre + '" no tiene stock disponible.',
+                            timer: 2000
+                        });
+                        return;
+                    }
+
+                    cart.push({
+                        id: data.id,
+                        sku: data.sku,
+                        nombre: data.nombre,
+                        stock: data.stockTotal,
+                        esPrestable: data.esPrestable,
+                        cantidad: 1
+                    });
+                    renderCart();
+                    playSound();
+                    toast('Producto agregado: ' + data.nombre, 'success');
+                } else {
+                     Swal.fire({
+                        icon: 'warning',
+                        title: 'No encontrado',
+                        text: 'No se encontró producto con SKU: ' + sku,
+                        timer: 1500
+                    });
+                }
+            });
+        }
+
+        // Render Cart
+        function renderCart() {
+            let html = '';
+            let totalQty = 0;
+
+            if(cart.length === 0) {
+                $('#emptyCartMessage').show();
+                $('#cartTable').hide();
+            } else {
+                $('#emptyCartMessage').hide();
+                $('#cartTable').show();
+
+                cart.forEach((item, index) => {
+                    totalQty += item.cantidad;
+                    html += `
+                        <tr class="product-row animate__animated animate__fadeIn">
+                            <td>
+                                <div class="font-weight-bold text-primary">${item.nombre}</div>
+                                <div class="small text-muted">${item.sku}</div>
+                                ${item.esPrestable ? '<span class="badge badge-info mt-1">Activo Fijo</span>' : ''}
+                            </td>
+                            <td class="text-center align-middle">
+                                <div class="input-group input-group-sm" style="width: 120px; margin: auto;">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQty(${index}, -1)">-</button>
+                                    </div>
+                                    <input type="text" class="form-control text-center font-weight-bold" value="${item.cantidad}" readonly>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQty(${index}, 1)">+</button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-right align-middle text-gray-800 font-weight-bold">
+                                ${item.stock}
+                            </td>
+                            <td class="align-middle">
+                                <button class="btn btn-link text-danger" onclick="removeItem(${index})"><i class="fas fa-times"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            $('#cartBody').html(html);
+            $('#totalItems').text(totalQty);
+            $('#scannerInput').focus(); // Always return focus to scanner
+        }
+
+        function updateQty(index, change) {
+            let item = cart[index];
+            let newQty = item.cantidad + change;
+            
+            if(newQty > item.stock) {
+                toast('No hay suficiente stock. Máximo: ' + item.stock, 'error');
+                return;
+            }
+            if(newQty < 1) return;
+
+            item.cantidad = newQty;
+            renderCart();
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        // Checkout Logic
+        function processCheckout() {
+            if(cart.length === 0) {
+                toast('El carrito está vacío', 'warning');
+                return;
+            }
+
+            let tipoSalida = $('input[name="tipoSalida"]:checked').val();
+            let usuarioId = $('#usuarioSolicitante').val();
+            let referencia = $('#referencia').val();
+
+            // Validate Loan
+            if(tipoSalida === 'PRESTAMO' && !usuarioId) {
+                Swal.fire('Validación', 'Debe seleccionar un Responsable para el préstamo.', 'warning');
+                return;
+            }
+
+            // Payload
+            let payload = {
+                tipoSalida: tipoSalida,
+                usuarioSolicitanteId: usuarioId ? parseInt(usuarioId) : null,
+                referencia: referencia,
+                items: cart.map(item => ({
+                    productoId: item.id,
+                    cantidad: item.cantidad
+                }))
+            };
+
+            Swal.fire({
+                title: 'Confirmar Salida',
+                text: "¿Estás seguro de procesar esta operación?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1cc88a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, procesar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                     Swal.showLoading();
+                     $.ajax({
+                        url: '@Url.Action("ProcesarSalida", "Salidas")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(payload),
+                        success: function(res) {
+                            if(res.success) {
+                                Swal.fire('¡Éxito!', res.message, 'success').then(() => {
+                                    clearCart();
+                                    $('#referencia').val('');
+                                });
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Helpers
+        function toast(msg, icon) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            Toast.fire({ icon: icon, title: msg });
+        }
+
+        function playSound() {
+            if($('#soundSwitch').is(':checked')) {
+                // simple beep or play audio object
+                // Audio play might be blocked by browser policy without interaction, but usually ok in internal apps
+                // audioSuccess.play().catch(e => console.log(e));
+            }
+        }
+    </script>
+}

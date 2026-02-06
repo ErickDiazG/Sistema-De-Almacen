@@ -95,7 +95,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item @(controller == "Entradas" ? "active font-weight-bold" : "")" asp-controller="Entradas" asp-action="Create">Entradas (Compras)</a>
                         <a class="collapse-item @(controller == "Inventario" ? "active font-weight-bold" : "")" asp-controller="Inventario" asp-action="Index">Inventario FIFO</a>
-                        <a class="collapse-item @(controller == "Venta" || (controller == "Home" && action == "Index") ? "active font-weight-bold" : "")" asp-controller="Home" asp-action="Index">Punto de Venta</a>
+                        <a class="collapse-item @(controller == "Salidas" ? "active font-weight-bold" : "")" asp-controller="Salidas" asp-action="Index">📤 Salidas / POS (FIFO)</a>
                         <a class="collapse-item @(controller == "Importar" ? "active font-weight-bold" : "")" asp-controller="Importar" asp-action="Index">📥 Importar Excel</a>
                         <a class="collapse-item @(controller == "Prestamos" ? "active font-weight-bold" : "")" asp-controller="Prestamos" asp-action="Index">🔧 Préstamos</a>
                     </div>
@@ -111,6 +111,8 @@
                 </a>
                 <div id="collapseReportes" class="collapse @(isReportes ? "show" : "")" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item @(controller == "Reportes" && action == "Kardex" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Kardex">📒 Kardex Contable</a>
+                        <a class="collapse-item @(controller == "Reportes" && action == "Mermas" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Mermas">🔴 Mermas y Pérdidas</a>
                         <a class="collapse-item @(controller == "Reportes" && action == "Auditoria" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Auditoria">Auditoría</a>
                         <a class="collapse-item @(controller == "Reportes" && action == "Index" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Index">Historial de Movimientos</a>
                         <a class="collapse-item @(controller == "Reportes" && action == "Graficos" ? "active font-weight-bold" : "")" asp-controller="Reportes" asp-action="Graficos">Ver Reportes (Gráficos)</a>

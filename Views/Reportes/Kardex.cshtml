@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Kardex de Producto";
+    var kardex = ViewBag.Kardex as List<Sistema_Almacen.Controllers.KardexRow> ?? new List<Sistema_Almacen.Controllers.KardexRow>();
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">📒 Kardex de Producto</h1>
+    @if(kardex.Any())
+    {
+        <button class="btn btn-success shadow-sm" onclick="exportToExcel()">
+            <i class="fas fa-file-excel mr-2"></i> Exportar a Excel
+        </button>
+    }
+</div>
+
+<!-- Product Selector -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Seleccionar Producto</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="form-inline">
+            <div class="form-group mr-3">
+                <label class="mr-2">Producto:</label>
+                <select name="productoId" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Seleccione --</option>
+                    @{
+                        var productos = ViewData["ProductoId"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+                        if (productos != null)
+                        {
+                            foreach (var item in productos)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if(kardex.Any())
+{
+    <!-- Product Header -->
+    <div class="alert alert-info border-left-info">
+        <strong>Producto:</strong> @ViewBag.ProductoNombre | 
+        <strong>SKU:</strong> @ViewBag.ProductoSKU |
+        <strong>Saldo Actual:</strong> @kardex.LastOrDefault()?.Saldo |
+        <strong>Valuación:</strong> @(kardex.LastOrDefault()?.ValorTotal.ToString("C", new System.Globalization.CultureInfo("es-MX")))
+    </div>
+
+    <!-- Kardex Table (Dense Layout) -->
+    <div class="card shadow mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover mb-0" id="kardexTable" style="font-size: 0.85rem;">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th class="text-center text-success">Entrada (+)</th>
+                            <th class="text-center text-danger">Salida (-)</th>
+                            <th class="text-center font-weight-bold">Saldo</th>
+                            <th class="text-right">Costo Unit.</th>
+                            <th class="text-right">Valor Total (MXN)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in kardex)
+                        {
+                            <tr>
+                                <td>@row.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-truncate" style="max-width: 300px;" title="@row.Concepto">@row.Concepto</td>
+                                <td class="text-center text-success font-weight-bold">
+                                    @(row.Entrada > 0 ? row.Entrada.ToString() : "-")
+                                </td>
+                                <td class="text-center text-danger font-weight-bold">
+                                    @(row.Salida > 0 ? row.Salida.ToString() : "-")
+                                </td>
+                                <td class="text-center font-weight-bold bg-light">@row.Saldo</td>
+                                <td class="text-right">@row.CostoUnitario.ToString("C", new System.Globalization.CultureInfo("es-MX"))</td>
+                                <td class="text-right font-weight-bold">@row.ValorTotal.ToString("C", new System.Globalization.CultureInfo("es-MX"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else if (ViewData["ProductoId"] != null && !string.IsNullOrEmpty(Context.Request.Query["productoId"]))
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle"></i> No hay movimientos registrados para este producto.
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        function exportToExcel() {
+            var table = document.getElementById('kardexTable');
+            var wb = XLSX.utils.table_to_book(table, { sheet: "Kardex" });
+            XLSX.writeFile(wb, 'Kardex_@(ViewBag.ProductoSKU ?? "Producto")_@(DateTime.Now.ToString("yyyyMMdd")).xlsx');
+        }
+    </script>
+}

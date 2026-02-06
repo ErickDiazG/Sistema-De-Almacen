@@ -30,8 +30,16 @@ namespace Sistema_Almacen.Models
         [StringLength(255)]
         public string? Referencia { get; set; }
 
+        public int? ProductoId { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CostoUnitario { get; set; } = 0;
+
         // Navegación
         [ForeignKey("UsuarioId")]
         public virtual Usuario Usuario { get; set; } = null!;
+
+        [ForeignKey("ProductoId")]
+        public virtual Producto? Producto { get; set; }
     }
 }

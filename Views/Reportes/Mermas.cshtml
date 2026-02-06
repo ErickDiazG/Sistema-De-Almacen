@@ -1,0 +1,142 @@
+@model IEnumerable<Sistema_Almacen.Models.MovimientoAlmacen>
+
+@{
+    ViewData["Title"] = "Reporte de Mermas y Pérdidas";
+    var totalPerdida = (decimal)(ViewBag.TotalPerdida ?? 0);
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">🔴 Reporte de Mermas y Pérdidas</h1>
+    <button class="btn btn-success shadow-sm" onclick="exportToExcel()">
+        <i class="fas fa-file-excel mr-2"></i> Exportar a Excel
+    </button>
+</div>
+
+<!-- BIG KPI CARD (RED) -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="card border-left-danger shadow h-100 py-2" style="background: linear-gradient(135deg, #fff 0%, #ffe6e6 100%);">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Pérdida Total Acumulada
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-danger">
+                            @totalPerdida.ToString("C", new System.Globalization.CultureInfo("es-MX"))
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Distribución por Tipo</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="pieChart" style="max-height: 200px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Incidentes
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">@Model.Count()</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED TABLE -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Detalle de Pérdidas y Daños</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="mermasTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th class="text-danger">Costo Pérdida (MXN)</th>
+                        <th>Responsable / Concepto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="font-weight-bold">@(item.Producto?.Nombre ?? "N/A")</td>
+                            <td class="text-center text-danger font-weight-bold">@item.Cantidad</td>
+                            <td class="text-danger text-right font-weight-bold">
+                                @((item.Cantidad * item.CostoUnitario).ToString("C", new System.Globalization.CultureInfo("es-MX")))
+                            </td>
+                            <td class="small">@item.Referencia</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if(!Model.Any())
+        {
+            <div class="alert alert-success text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <p class="mb-0">¡Excelente! No hay pérdidas ni mermas registradas.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Pie Chart
+        var ctx = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.ChartLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.ChartData ?? "[]"),
+                    backgroundColor: ['#e74a3b', '#f6c23e'],
+                    hoverBackgroundColor: ['#c0392b', '#d4a017'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        function exportToExcel() {
+            var table = document.getElementById('mermasTable');
+            var wb = XLSX.utils.table_to_book(table, { sheet: "Mermas" });
+            XLSX.writeFile(wb, 'Reporte_Mermas_@(DateTime.Now.ToString("yyyyMMdd")).xlsx');
+        }
+    </script>
+}
